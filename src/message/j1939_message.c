@@ -1,12 +1,12 @@
 /**
   * Copyright 2022 ShunzDai
-  * 
+  *
   * Licensed under the Apache License, Version 2.0 (the "License");
   * you may not use this file except in compliance with the License.
   * You may obtain a copy of the License at
-  * 
+  *
   *     http://www.apache.org/licenses/LICENSE-2.0
-  * 
+  *
   * Unless required by applicable law or agreed to in writing, software
   * distributed under the License is distributed on an "AS IS" BASIS,
   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,12 +32,12 @@ uint32_t J1939_GetPGN(uint32_t PDU){
   * @brief  Put PGN into the ID(When the PDU is PDU1, the PS bits of the ID will not changed)
   * @param  PDU CAN id container printer
   * @param  PGN PGN value
-  * @retval void
+  * @retval J1939 status
   */
-void J1939_SetPGN(uint32_t *PDU, const uint32_t PGN){
+J1939_Status_t J1939_SetPGN(uint32_t *PDU, const uint32_t PGN){
   if (PDU == NULL){
     J1939_LOG_ERROR("[PDU]A null pointer appears");
-    return;
+    return J1939_ERROR;
   }
   /* Reference SAE J1939-21 5.1.2 */
   ((J1939_PDU_t *)PDU)->Reserved = (PGN >> 17) & 0x01;
@@ -45,6 +45,7 @@ void J1939_SetPGN(uint32_t *PDU, const uint32_t PGN){
   ((J1939_PDU_t *)PDU)->PDUFormat = (PGN >> 8) & 0xFF;
   if (((J1939_PDU_t *)PDU)->PDUFormat >= J1939_ADDRESS_DIVIDE)
     ((J1939_PDU_t *)PDU)->PDUSpecific = (PGN >> 0) & 0xFF;
+  return J1939_OK;
 }
 
 /**

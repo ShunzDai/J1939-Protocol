@@ -1,12 +1,12 @@
 /**
   * Copyright 2022 ShunzDai
-  * 
+  *
   * Licensed under the Apache License, Version 2.0 (the "License");
   * you may not use this file except in compliance with the License.
   * You may obtain a copy of the License at
-  * 
+  *
   *     http://www.apache.org/licenses/LICENSE-2.0
-  * 
+  *
   * Unless required by applicable law or agreed to in writing, software
   * distributed under the License is distributed on an "AS IS" BASIS,
   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -47,7 +47,7 @@ typedef struct J1939_Message{
 } * J1939_Message_t;
 
 uint32_t J1939_GetPGN(uint32_t PDU);
-void J1939_SetPGN(uint32_t *PDU, const uint32_t PGN);
+J1939_Status_t J1939_SetPGN(uint32_t *PDU, const uint32_t PGN);
 
 J1939_Message_t J1939_MessageCreate(const uint32_t ID, const uint16_t Length, const void *Payload);
 J1939_Status_t J1939_MessageDelete(J1939_Message_t *MsgPtr);

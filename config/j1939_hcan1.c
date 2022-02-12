@@ -19,16 +19,17 @@
 #include "j1939.h"
 
 __weak J1939_EXTERN_FUNCTION_DEF(hcan1, SoftwareFilter){
-  typedef struct Filter{
+  typedef struct J1939_Filter{
     uint8_t SelfAddress;
     J1939_Message_t Msg;
-  } Filter_t;
+  } * J1939_Filter_t;
+  J1939_Filter_t Pack = (J1939_Filter_t)argument;
   /* Config software filter rules START */
-  if (((Filter_t *)argument)->Msg->PDU.PDUFormat >= J1939_ADDRESS_DIVIDE)/* PDU2 */
+  if (Pack->Msg->PDU.PDUFormat >= J1939_ADDRESS_DIVIDE)/* PDU2 */
     return J1939_OK;
-  else if (((Filter_t *)argument)->Msg->PDU.PDUSpecific == ((Filter_t *)argument)->SelfAddress)/* PDU1 */
+  else if (Pack->Msg->PDU.PDUSpecific == Pack->SelfAddress)/* PDU1 */
     return J1939_OK;
-  else if (((Filter_t *)argument)->Msg->PDU.PDUSpecific == J1939_ADDRESS_GLOBAL)/* Global address */
+  else if (Pack->Msg->PDU.PDUSpecific == J1939_ADDRESS_GLOBAL)/* Global address */
     return J1939_OK;
   else
     return J1939_ERROR;
@@ -36,31 +37,31 @@ __weak J1939_EXTERN_FUNCTION_DEF(hcan1, SoftwareFilter){
 }
 
 __weak J1939_EXTERN_FUNCTION_DEF(hcan1, DecodePayload){
-  uint32_t PGN = J1939_GetPGN(((J1939_Message_t)argument)->ID);
-  void *p = NULL;
-  switch(PGN){
-    /* User define START */
+  J1939_Message_t Msg = (J1939_Message_t)argument;
+  /* User define START */
+  switch(J1939_GetPGN(Msg->ID)){
 
-    /* User define END */
     default:
-      J1939_LOG_WARN("[Decode]fail to identify(0x%06X)", PGN);
+      J1939_LOG("[hcan1]RX 0x%08X ", Msg->ID);
+      for (uint32_t i = 0; i < Msg->Length; i++)
+        J1939_LOG("%02X ", Msg->Payload[i]);
+      J1939_LOG("\r\n");
+      J1939_LOG_WARN("[hcan1]fail to identify(0x%08X)", Msg->ID);
       return J1939_ERROR;
   }
-
-  if (p != NULL){
-    J1939_memcpy(p, ((J1939_Message_t)argument)->Payload, ((J1939_Message_t)argument)->Length);
-    return J1939_OK;
-  }
-  J1939_LOG_ERROR("A null pointer appears");
-  return J1939_ERROR;
+  /* User define END */
 }
 
 /**
   * @brief This function handles message sending interrupt.
   */
 __weak J1939_EXTERN_FUNCTION_DEF(hcan1, SendingCallBack){
+  J1939_Message_t Msg = (J1939_Message_t)argument;
   /* User define START */
-  J1939_LOG_INFO("'hcan1' Message sending PGN 0x%06X", J1939_GetPGN(((J1939_Message_t)argument)->ID));
+  J1939_LOG("[hcan1]TX 0x%08X ", Msg->ID);
+  for (uint32_t i = 0; i < Msg->Length; i++)
+    J1939_LOG("%02X ", Msg->Payload[i]);
+  J1939_LOG("\r\n");
   /* User define END */
   return J1939_OK;
 };
@@ -69,9 +70,9 @@ __weak J1939_EXTERN_FUNCTION_DEF(hcan1, SendingCallBack){
   * @brief This function handles message missing interrupt.
   */
 __weak J1939_EXTERN_FUNCTION_DEF(hcan1, MissingCallBack){
+  J1939_Message_t Msg = (J1939_Message_t)argument;
   /* User define START */
-  J1939_LOG_ERROR("'hcan1' Message missing(PGN 0x%06X)", J1939_GetPGN(((J1939_Message_t)argument)->ID));
-
+  J1939_LOG_ERROR("[hcan1]TX Message missing(0x%08X)", Msg->ID);
   /* User define END */
   return J1939_OK;
 };
@@ -80,6 +81,7 @@ __weak J1939_EXTERN_FUNCTION_DEF(hcan1, MissingCallBack){
   * @brief This function handles message reading interrupt.
   */
 __weak J1939_EXTERN_FUNCTION_DEF(hcan1, ReadingCallBack){
+  J1939_Message_t Msg = (J1939_Message_t)argument;
   /* User define START */
 
   /* User define END */
@@ -90,8 +92,9 @@ __weak J1939_EXTERN_FUNCTION_DEF(hcan1, ReadingCallBack){
   * @brief This function handles message timeout interrupt.
   */
 __weak J1939_EXTERN_FUNCTION_DEF(hcan1, TimeoutCallBack){
+  J1939_Message_t Msg = (J1939_Message_t)argument;
   /* User define START */
-  J1939_LOG_ERROR("'hcan1' timeout(PGN 0x%06X)", J1939_GetPGN(((J1939_Message_t)argument)->ID));
+  J1939_LOG_ERROR("[hcan1]timeout(PGN 0x%08X)", Msg->ID);
   /* User define END */
   return J1939_OK;
 };

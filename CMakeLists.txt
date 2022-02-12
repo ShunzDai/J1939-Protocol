@@ -17,6 +17,8 @@ file(GLOB_RECURSE DIR_SRCS
   config/*.c
 )
 
-add_executable(demo1 ${DIR_SRCS} demo/j1939_demo1.c)
+add_executable(j1939_demo_stability ${DIR_SRCS} demo/j1939_demo_stability.c)
+add_executable(j1939_demo_cpp ${DIR_SRCS} demo/j1939_demo_cpp.cpp)
+add_executable(j1939_demo_protocol ${DIR_SRCS} demo/j1939_demo_protocol.c)
 
 # target_link_libraries(demo pthread)

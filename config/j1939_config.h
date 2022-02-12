@@ -27,7 +27,7 @@ extern "C"{
 #define J1939_PORT_SUSPEND                  0
 #define J1939_PORT_VIRTUAL                  1
 #define J1939_PORT_STM32                    2
-#define J1939_PORT_TYPE                     J1939_PORT_VIRTUAL
+#define J1939_PORT_TYPE                     J1939_PORT_SUSPEND
 #define __J1939_Port(val)                   (J1939_PORT_TYPE == J1939_PORT_##val)
 
 #if __J1939_Port(VIRTUAL)
@@ -38,10 +38,10 @@ extern "C"{
 #define J1939_LOG_ENABLE                    1
 #if J1939_LOG_ENABLE
 #include <stdio.h>
-#define J1939_LOG(format, ...)              printf("[J1939]" format "\r\n", ##__VA_ARGS__)
-#define J1939_LOG_INFO(format, ...)         J1939_LOG("[Info]" format, ##__VA_ARGS__)
-#define J1939_LOG_WARN(format, ...)         J1939_LOG("[Warn]" "func %s, file %s, line %d: " format, __FUNCTION__, __FILE__, __LINE__, ##__VA_ARGS__)
-#define J1939_LOG_ERROR(format, ...)        J1939_LOG("[Error]" "func %s, file %s, line %d: " format, __FUNCTION__, __FILE__, __LINE__, ##__VA_ARGS__)
+#define J1939_LOG(format, ...)              printf(format, ##__VA_ARGS__)
+#define J1939_LOG_INFO(format, ...)         J1939_LOG("[J1939][Info]" format "\r\n", ##__VA_ARGS__)
+#define J1939_LOG_WARN(format, ...)         J1939_LOG("[J1939][Warn]" "func %s, file %s, line %d: " format "\r\n", __FUNCTION__, __FILE__, __LINE__, ##__VA_ARGS__)
+#define J1939_LOG_ERROR(format, ...)        J1939_LOG("[J1939][Error]" "func %s, file %s, line %d: " format "\r\n", __FUNCTION__, __FILE__, __LINE__, ##__VA_ARGS__)
 #else
 #define J1939_LOG_INFO(format, ...)
 #define J1939_LOG_WARN(format, ...)
@@ -52,8 +52,12 @@ extern "C"{
 #define J1939_ADDRESS_NULL                  0xFE/* DO NOT MODIFIED THIS PRAMETER */
 #define J1939_ADDRESS_GLOBAL                0xFF/* DO NOT MODIFIED THIS PRAMETER */
 
-/* Config SAE J1939 Transport Protocol, enabled by default */
+/* Config J1939 transport Protocol, enabled by default */
 #define J1939_ENABLE_TRANSPORT_PROTOCOL     1
+
+#if J1939_ENABLE_TRANSPORT_PROTOCOL
+/* Config response packets number of TP CTS */
+#define J1939_TP_CM_CTS_RESPONSE            4
 
 /* Reference https://elearning.vector.com/mod/page/view.php?id=422 */
 /* Reference SAE J1939-81 */
@@ -79,6 +83,7 @@ extern "C"{
 /* Used for acknowledgement of various network services. Can be positive or negative. */
 /* The acknowledgement is referenced accordingly in the application layer. */
 #define J1939_PGN_ACKNOWLEDGEMENT           0x00E800
+#endif /* J1939_ENABLE_TRANSPORT_PROTOCOL */
 
 #ifdef __cplusplus
 }

@@ -37,10 +37,16 @@ void thread_5ms(void){
   }
 }
 
-void thread_100ms(void){
+void thread_1000ms(void){
   static uint64_t tick;
+  static uint8_t type;
   if (J1939_PortGetTick() - tick >= 1000){
-    J1939_Message_t Msg = J1939_MessageCreate(0x18F00400, 16, "12345678ABCDEFGH");
+    J1939_Message_t Msg = NULL;
+    type = !type;
+    if (type)
+      Msg = J1939_MessageCreate(0x18E00201, 52, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");/* CMDT */
+    else
+      Msg = J1939_MessageCreate(0x18F00201, 52, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");/* BAM */
     J1939_SendMessage(Handle1, Msg);
     J1939_MessageDelete(&Msg);
     tick = J1939_PortGetTick();
@@ -55,9 +61,9 @@ int main(void){
   Handle2 = J1939_HandleCreate((char *)"hcan2", 0x02, 32);
 
   uint64_t tick = J1939_PortGetTick();
-  while(J1939_PortGetTick() - tick <= 5000){
+  while(J1939_PortGetTick() - tick <= 10000){
     thread_5ms();
-    thread_100ms();
+    thread_1000ms();
   }
 
   J1939_HandleDelete(&Handle1);

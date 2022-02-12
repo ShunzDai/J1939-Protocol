@@ -1,12 +1,12 @@
 /**
   * Copyright 2022 ShunzDai
-  * 
+  *
   * Licensed under the Apache License, Version 2.0 (the "License");
   * you may not use this file except in compliance with the License.
   * You may obtain a copy of the License at
-  * 
+  *
   *     http://www.apache.org/licenses/LICENSE-2.0
-  * 
+  *
   * Unless required by applicable law or agreed to in writing, software
   * distributed under the License is distributed on an "AS IS" BASIS,
   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -38,7 +38,7 @@ struct J1939_Queue{
 /**
   * @brief  Package objects into nodes in create method
   * @param  Obj The packaged object
-  * @param  CreateMethod Create method, format must be 
+  * @param  CreateMethod Create method, format must be
   * 'object *method(object *obj)', can be a null printer
   * @retval Node package
   */
@@ -56,19 +56,19 @@ static J1939_Node_t J1939_NodeCreate(void *Obj, J1939_Method_t CreateMethod){
 /**
   * @brief  Delete objects from nodes in delete method
   * @param  Node A pointer to the node where the object is located
-  * @param  DeleteMethod Delete method, format must be 
+  * @param  DeleteMethod Delete method, format must be
   * 'whatever method(object **obj)', the double printer is used to
   *  assign a null value to *obj. can be a null printer
   * @retval J1939 status
   */
 static J1939_Status_t J1939_NodeDelete(J1939_Node_t *Node, J1939_Method_t DeleteMethod){
-  if (Node == NULL || *Node == NULL){
+  if (Node == NULL){
     J1939_LOG_ERROR("[Node]A null pointer appears");
     return J1939_ERROR;
-  }/*
-  else if (Node->Next != NULL){
-    J1939_LOG_WARN("[Node]Node->Next is not released");
-  }*/
+  }
+  else if (*Node == NULL){
+    return J1939_OK;
+  }
   else if ((*Node)->Obj != NULL && DeleteMethod != NULL){
     DeleteMethod(&(*Node)->Obj);
   }
@@ -276,13 +276,13 @@ J1939_Status_t J1939_QueueClear(J1939_Queue_t Queue){
     J1939_LOG_ERROR("[Queue]A null pointer appears");
     return J1939_ERROR;
   }
-  
+
   while (Queue->Count){
     if (J1939_Dequeue(Queue, 1) != J1939_OK){
       return J1939_ERROR;
     }
   }
-  
+
   return J1939_OK;
 }
 

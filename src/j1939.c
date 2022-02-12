@@ -96,10 +96,10 @@ static J1939_Status_t J1939_Transmit(J1939_t Handle){
   * @retval J1939 status
   */
 static J1939_Status_t J1939_Receive(J1939_t Handle){
-  typedef struct Filter{
+  typedef struct J1939_Filter{
     uint8_t SelfAddress;
     J1939_Message_t Msg;
-  } Filter_t;
+  } J1939_Filter_t;
   /* Check mailboxes */
   uint32_t FillLevel = J1939_PortGetRxFifoFillLevel(Handle->Port);
   if (FillLevel == 0)
@@ -110,7 +110,7 @@ static J1939_Status_t J1939_Receive(J1939_t Handle){
   while (FillLevel--){
     if (J1939_PortGetRxMessage(Handle->Port, &Msg) == J1939_OK){
       Handle->ReadingCallBack(Msg);
-      Filter_t Pack = {Handle->SelfAddress, Msg};
+      J1939_Filter_t Pack = {Handle->SelfAddress, Msg};
       if (Handle->SoftwareFilter(&Pack) == J1939_OK)
         J1939_ReceiveSplit(Handle, Msg);
       J1939_MessageDelete(&Msg);
@@ -316,7 +316,6 @@ J1939_Status_t J1939_HandleDelete(J1939_t *Handle){
     *Handle = NULL;
     return J1939_OK;
   }
-
 }
 
 /**
