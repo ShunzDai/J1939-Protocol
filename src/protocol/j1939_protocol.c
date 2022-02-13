@@ -348,7 +348,9 @@ static J1939_Status_t J1939_TP_CM_BAM_TransmitManager(J1939_Protocol_t Protocol,
 }
 
 static J1939_Status_t J1939_TP_CM_BAM_ReceiveManager(J1939_Protocol_t Protocol, J1939_Message_t Msg){
-  Protocol->Buffer = J1939_MessageCreate(Msg->ID, ((J1939_BAM_t *)Msg->Payload)->MessageSize, NULL);
+  Protocol->Buffer = J1939_MessageCreate(0, ((J1939_RTS_t *)Msg->Payload)->MessageSize, NULL);
+  Protocol->Buffer->PDU.SourceAddress = Msg->PDU.SourceAddress;
+  Protocol->Buffer->PDU.PDUSpecific = Msg->PDU.PDUSpecific;
   J1939_SetPGN(&Protocol->Buffer->ID, ((J1939_BAM_t *)Msg->Payload)->PGN);
 
   Protocol->TotalPackets = ((J1939_BAM_t *)Msg->Payload)->TotalPackets;

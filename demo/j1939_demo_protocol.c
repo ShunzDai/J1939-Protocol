@@ -41,12 +41,8 @@ void thread_1000ms(void){
   static uint64_t tick;
   static uint8_t type;
   if (J1939_PortGetTick() - tick >= 1000){
-    J1939_Message_t Msg = NULL;
     type = !type;
-    if (type)
-      Msg = J1939_MessageCreate(0x18E00201, 52, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");/* CMDT */
-    else
-      Msg = J1939_MessageCreate(0x18F00201, 52, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");/* BAM */
+		J1939_Message_t Msg = J1939_MessageCreate(type ? 0x18E00201 : 0x18F00201, 52, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
     J1939_SendMessage(Handle1, Msg);
     J1939_MessageDelete(&Msg);
     tick = J1939_PortGetTick();

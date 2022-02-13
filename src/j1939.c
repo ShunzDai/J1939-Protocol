@@ -20,12 +20,6 @@
 #include "src/port/j1939_port.h"
 #include "src/protocol/j1939_protocol.h"
 
-#define J1939_EXTERN_FUNCTION(Key, FuncPtr)\
-do{\
-  J1939_EXTERN_FUNCTION_DEF(Key, FuncPtr);\
-  Handle->FuncPtr = &J1939_##Key##_##FuncPtr;\
-}while(0)
-
 /* J1939 register struct */
 typedef J1939_Queue_t * J1939_Register_t;
 
@@ -35,16 +29,17 @@ struct J1939{
   char *Name;
   uint8_t SelfAddress;
   J1939_Queue_t TxFIFO;
-  J1939_FuncPtr_t SoftwareFilter;
-  J1939_FuncPtr_t DecodePayload;
-  J1939_FuncPtr_t SendingCallBack;
-  J1939_FuncPtr_t MissingCallBack;
-  J1939_FuncPtr_t ReadingCallBack;
-  J1939_FuncPtr_t TimeoutCallBack;
   #if J1939_ENABLE_TRANSPORT_PROTOCOL
   J1939_Protocol_t Protocol;
   #endif /* J1939_ENABLE_TRANSPORT_PROTOCOL */
 };
+
+J1939_Status_t J1939_AppSoftwareFilter(J1939_t Handle, J1939_Message_t Msg);
+J1939_Status_t J1939_AppDecodePayload(J1939_t Handle, J1939_Message_t Msg);
+J1939_Status_t J1939_AppSendingCallBack(J1939_t Handle, J1939_Message_t Msg);
+J1939_Status_t J1939_AppMissingCallBack(J1939_t Handle, J1939_Message_t Msg);
+J1939_Status_t J1939_AppReadingCallBack(J1939_t Handle, J1939_Message_t Msg);
+J1939_Status_t J1939_AppTimeoutCallBack(J1939_t Handle, J1939_Message_t Msg);
 
 static J1939_Status_t J1939_Transmit(J1939_t Handle);
 static J1939_Status_t J1939_Receive(J1939_t Handle);
@@ -77,9 +72,9 @@ static J1939_Status_t J1939_Transmit(J1939_t Handle){
     }
 
     if (J1939_PortAddTxMessage(Handle->Port, Msg) == J1939_OK)
-      Handle->SendingCallBack(Msg);
+      J1939_AppSendingCallBack(Handle, Msg);
     else
-      Handle->MissingCallBack(Msg);
+      J1939_AppMissingCallBack(Handle, Msg);
 
     J1939_Dequeue(Handle->TxFIFO, 1);
 
@@ -96,10 +91,6 @@ static J1939_Status_t J1939_Transmit(J1939_t Handle){
   * @retval J1939 status
   */
 static J1939_Status_t J1939_Receive(J1939_t Handle){
-  typedef struct J1939_Filter{
-    uint8_t SelfAddress;
-    J1939_Message_t Msg;
-  } J1939_Filter_t;
   /* Check mailboxes */
   uint32_t FillLevel = J1939_PortGetRxFifoFillLevel(Handle->Port);
   if (FillLevel == 0)
@@ -109,9 +100,8 @@ static J1939_Status_t J1939_Receive(J1939_t Handle){
   /* Get all mails untill hardware or software FIFO becomes empty */
   while (FillLevel--){
     if (J1939_PortGetRxMessage(Handle->Port, &Msg) == J1939_OK){
-      Handle->ReadingCallBack(Msg);
-      J1939_Filter_t Pack = {Handle->SelfAddress, Msg};
-      if (Handle->SoftwareFilter(&Pack) == J1939_OK)
+      J1939_AppReadingCallBack(Handle, Msg);
+      if (J1939_AppSoftwareFilter(Handle, Msg) == J1939_OK)
         J1939_ReceiveSplit(Handle, Msg);
       J1939_MessageDelete(&Msg);
     }
@@ -152,7 +142,7 @@ static J1939_Status_t J1939_ReceiveSplit(J1939_t Handle, J1939_Message_t Msg){
   if (J1939_ProtocolReceiveManager(Handle->Protocol, Msg) == J1939_OK)
     return J1939_OK;
   #endif /* J1939_ENABLE_TRANSPORT_PROTOCOL */
-  return Handle->DecodePayload(Msg);
+  return J1939_AppDecodePayload(Handle, Msg);
 }
 
 /**
@@ -236,12 +226,6 @@ J1939_t J1939_HandleCreate(char *Name, uint8_t SelfAddress, uint32_t QueueSize){
   do{\
     if (strcmp(Name, #Key) == 0){\
       Handle->Port = &Key;\
-      J1939_EXTERN_FUNCTION(Key, SoftwareFilter);\
-      J1939_EXTERN_FUNCTION(Key, DecodePayload);\
-      J1939_EXTERN_FUNCTION(Key, SendingCallBack);\
-      J1939_EXTERN_FUNCTION(Key, MissingCallBack);\
-      J1939_EXTERN_FUNCTION(Key, ReadingCallBack);\
-      J1939_EXTERN_FUNCTION(Key, TimeoutCallBack);\
     }\
   }while(0)
   #include "j1939_register.inc"
@@ -318,6 +302,31 @@ J1939_Status_t J1939_HandleDelete(J1939_t *Handle){
   }
 }
 
+char *J1939_GetPortName(J1939_t Handle){
+  if (Handle == NULL){
+    J1939_LOG_ERROR("[Handle]A null pointer appears");
+    return 0;
+  }
+  return Handle->Name;
+}
+
+uint8_t J1939_GetSelfAddress(J1939_t Handle){
+  if (Handle == NULL){
+    J1939_LOG_ERROR("[Handle]A null pointer appears");
+    return 0;
+  }
+  return Handle->SelfAddress;
+}
+
+J1939_Status_t J1939_SetSelfAddress(J1939_t Handle, uint8_t SelfAddress){
+  if (Handle == NULL){
+    J1939_LOG_ERROR("[Handle]A null pointer appears");
+    return J1939_ERROR;
+  }
+  Handle->SelfAddress = SelfAddress;
+  return J1939_OK;
+}
+
 /**
   * @brief  J1939 task handler, put it in a timer with a period of 5 milliseconds
   * @param  void
@@ -333,10 +342,10 @@ J1939_Status_t J1939_TaskHandler(void){
         J1939_Enqueue(Handle->TxFIFO, Msg);
         break;
       case J1939_RECEIVED:
-        Handle->DecodePayload(Msg);
+        J1939_AppDecodePayload(Handle, Msg);
         break;
       case J1939_TIMEOUT:
-        Handle->TimeoutCallBack(Msg);
+        J1939_AppTimeoutCallBack(Handle, Msg);
         break;
       default:
         break;
