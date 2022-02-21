@@ -19,45 +19,54 @@
 extern "C"{
 #endif /* __cplusplus */
 
-/* CAN buffer size */
-#define J1939_SIZE_CAN_BUFFER               8
-/* CAN port size */
-#define J1939_SIZE_CAN_PORT                 8
-
 #define J1939_PORT_SUSPEND                  0
 #define J1939_PORT_VIRTUAL                  1
 #define J1939_PORT_STM32                    2
 #define J1939_PORT_TYPE                     J1939_PORT_SUSPEND
 #define __J1939_Port(val)                   (J1939_PORT_TYPE == J1939_PORT_##val)
 
+#define J1939_LOG_ENABLE                    1
+
+/* CAN buffer size */
+#define J1939_SIZE_CAN_BUFFER               8
+/* CAN port size */
+#define J1939_SIZE_CAN_PORT                 8
+
 #if __J1939_Port(VIRTUAL)
-#define J1939_SIZE_VIRTUAL_NODE             J1939_SIZE_CAN_PORT
+#define J1939_SIZE_VIRTUAL_PORT             J1939_SIZE_CAN_PORT
 #define J1939_SIZE_VIRTUAL_FIFO             3
 #endif /* __J1939_Port() */
 
-#define J1939_LOG_ENABLE                    1
 #if J1939_LOG_ENABLE
 #include <stdio.h>
 #define J1939_LOG(format, ...)              printf(format, ##__VA_ARGS__)
 #define J1939_LOG_INFO(format, ...)         J1939_LOG("[J1939][Info]" format "\r\n", ##__VA_ARGS__)
 #define J1939_LOG_WARN(format, ...)         J1939_LOG("[J1939][Warn]" "func %s, file %s, line %d: " format "\r\n", __FUNCTION__, __FILE__, __LINE__, ##__VA_ARGS__)
 #define J1939_LOG_ERROR(format, ...)        J1939_LOG("[J1939][Error]" "func %s, file %s, line %d: " format "\r\n", __FUNCTION__, __FILE__, __LINE__, ##__VA_ARGS__)
-#else
+#else /* J1939_LOG_ENABLE */
+#define J1939_LOG(format, ...)
 #define J1939_LOG_INFO(format, ...)
 #define J1939_LOG_WARN(format, ...)
 #define J1939_LOG_ERROR(format, ...)
-#endif
+#endif /* J1939_LOG_ENABLE */
 
 #define J1939_ADDRESS_DIVIDE                0xF0/* DO NOT MODIFIED THIS PRAMETER */
 #define J1939_ADDRESS_NULL                  0xFE/* DO NOT MODIFIED THIS PRAMETER */
 #define J1939_ADDRESS_GLOBAL                0xFF/* DO NOT MODIFIED THIS PRAMETER */
 
 /* Config J1939 transport Protocol, enabled by default */
-#define J1939_ENABLE_TRANSPORT_PROTOCOL     1
+#define J1939_TRANSPORT_PROTOCOL_ENABLE     1
 
-#if J1939_ENABLE_TRANSPORT_PROTOCOL
+#if J1939_TRANSPORT_PROTOCOL_ENABLE
+/* Reference SAE J1939-21 5.10.1.1 */
+/* min size = 9, max size = 1785 */
+#define J1939_TP_BUFFER_SIZE                1785
 /* Config response packets number of TP CTS */
 #define J1939_TP_CM_CTS_RESPONSE            4
+
+#define J1939_TP_DEFAULT_PRIORITY           0x07
+
+#define J1939_TP_BAM_TX_INTERVAL            50
 
 /* Reference https://elearning.vector.com/mod/page/view.php?id=422 */
 /* Reference SAE J1939-81 */
@@ -83,7 +92,7 @@ extern "C"{
 /* Used for acknowledgement of various network services. Can be positive or negative. */
 /* The acknowledgement is referenced accordingly in the application layer. */
 #define J1939_PGN_ACKNOWLEDGEMENT           0x00E800
-#endif /* J1939_ENABLE_TRANSPORT_PROTOCOL */
+#endif /* J1939_TRANSPORT_PROTOCOL_ENABLE */
 
 #ifdef __cplusplus
 }

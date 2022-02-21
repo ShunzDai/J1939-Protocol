@@ -172,34 +172,6 @@ J1939_Status_t J1939_QueueDelete(J1939_Queue_t *Queue){
 }
 
 /**
-  * @brief  Return the object in the first node of the queue
-  * @param  Queue Queue handle
-  * @retval Object
-  */
-void *J1939_QueueHead(J1939_Queue_t Queue){
-  if (Queue == NULL){
-    J1939_LOG_ERROR("[Queue]A null pointer appears");
-    return NULL;
-  }
-  J1939_Node_t *Node = J1939_QueuePointer(Queue, 1);
-  return (*Node == NULL) ? NULL : (*Node)->Obj;
-}
-
-/**
-  * @brief  Return the object in the last node of the queue
-  * @param  Queue Queue handle
-  * @retval Object
-  */
-void *J1939_QueueTail(J1939_Queue_t Queue){
-  if (Queue == NULL){
-    J1939_LOG_ERROR("[Queue]A null pointer appears");
-    return NULL;
-  }
-  J1939_Node_t *Node = J1939_QueuePointer(Queue, Queue->Count);
-  return (*Node == NULL) ? NULL : (*Node)->Obj;
-}
-
-/**
   * @brief  Return the object of the specified node of the queue
   * @param  Queue Queue handle
   * @param  Serial Node position
@@ -217,6 +189,24 @@ void *J1939_QueueAmong(J1939_Queue_t Queue, const uint32_t Serial){
   J1939_Node_t *Node = J1939_QueuePointer(Queue, Serial);
   return (*Node == NULL) ? NULL : (*Node)->Obj;
 }
+
+/**
+  * @brief  Return the object in the first node of the queue
+  * @param  Queue Queue handle
+  * @retval Object
+  */
+//void *J1939_QueueHead(J1939_Queue_t Queue){
+//  return J1939_QueueAmong(Queue, 1);
+//}
+
+/**
+  * @brief  Return the object in the last node of the queue
+  * @param  Queue Queue handle
+  * @retval Object
+  */
+//void *J1939_QueueTail(J1939_Queue_t Queue){
+//  return J1939_QueueAmong(Queue, Queue->Count);
+//}
 
 /**
   * @brief  Package an object as a node and put it at the end of the queue

@@ -19,8 +19,6 @@
 extern "C" {
 #endif /* __cplusplus */
 
-//#pragma anon_unions
-
 #include "src/common/j1939_typedef.h"
 #include "src/message/j1939_message.h"
 
@@ -34,9 +32,11 @@ J1939_Status_t J1939_HandleDelete(J1939_t *Handle);
 char *J1939_GetPortName(J1939_t Handle);
 uint8_t J1939_GetSelfAddress(J1939_t Handle);
 J1939_Status_t J1939_SetSelfAddress(J1939_t Handle, uint8_t SelfAddress);
+J1939_Status_t J1939_GetProtocolStatus(J1939_t Handle);
 
 J1939_Status_t J1939_TaskHandler(void);
 J1939_Status_t J1939_SendMessage(J1939_t Handle, J1939_Message_t Msg);
+J1939_Status_t J1939_Send(J1939_t Handle, const uint32_t ID, const uint16_t Length, const void *Payload);
 
 #ifdef __cplusplus
 }

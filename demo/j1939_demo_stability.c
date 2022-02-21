@@ -39,7 +39,7 @@ void thread_5ms(void){
 
 void thread_1000ms(void){
   static uint64_t tick;
-  if (J1939_PortGetTick() - tick >= 1000){
+  if (J1939_PortGetTick() - tick >= 100){
     J1939_Message_t Msg = J1939_MessageCreate(0x18F00400, 8, "12345678");
     J1939_SendMessage(Handle1, Msg);
     J1939_SendMessage(Handle2, Msg);
@@ -57,7 +57,7 @@ int main(void){
     Handle2 = J1939_HandleCreate((char *)"hcan2", 0x02, 32);
 
     uint64_t tick = J1939_PortGetTick();
-    while(J1939_PortGetTick() - tick <= 3000){
+    while(J1939_PortGetTick() - tick <= 1000){
       thread_5ms();
       thread_1000ms();
     }

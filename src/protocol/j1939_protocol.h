@@ -20,7 +20,7 @@ extern "C" {
 #endif /* __cplusplus */
 
 #include "src/common/j1939_typedef.h"
-#include "src/j1939.h"
+#include "src/message/j1939_message.h"
 
 struct J1939_Protocol;
 
@@ -32,6 +32,8 @@ J1939_Status_t J1939_ProtocolDelete(J1939_Protocol_t *Protocol);
 J1939_Status_t J1939_ProtocolTransmitManager(J1939_Protocol_t Protocol, J1939_Message_t Msg);
 J1939_Status_t J1939_ProtocolReceiveManager(J1939_Protocol_t Protocol, J1939_Message_t Msg);
 J1939_Status_t J1939_ProtocolTaskHandler(J1939_Protocol_t Protocol, J1939_Message_t *MsgPtr);
+
+J1939_Status_t J1939_ProtocolStatus(J1939_Protocol_t Protocol);
 
 #ifdef __cplusplus
 }

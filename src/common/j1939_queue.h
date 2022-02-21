@@ -1,12 +1,12 @@
 /**
   * Copyright 2022 ShunzDai
-  * 
+  *
   * Licensed under the Apache License, Version 2.0 (the "License");
   * you may not use this file except in compliance with the License.
   * You may obtain a copy of the License at
-  * 
+  *
   *     http://www.apache.org/licenses/LICENSE-2.0
-  * 
+  *
   * Unless required by applicable law or agreed to in writing, software
   * distributed under the License is distributed on an "AS IS" BASIS,
   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,9 +27,11 @@ typedef struct J1939_Queue * J1939_Queue_t;
 
 J1939_Queue_t J1939_QueueCreate(char *Name, uint32_t QueueSize, void *CreateMethod, void *DeleteMethod);
 J1939_Status_t J1939_QueueDelete(J1939_Queue_t *Queue);
-void *J1939_QueueHead(J1939_Queue_t Queue);
-void *J1939_QueueTail(J1939_Queue_t Queue);
 void *J1939_QueueAmong(J1939_Queue_t Queue, const uint32_t Serial);
+//void *J1939_QueueHead(J1939_Queue_t Queue);
+//void *J1939_QueueTail(J1939_Queue_t Queue);
+#define J1939_QueueHead(Queue) J1939_QueueAmong(Queue, 1)
+#define J1939_QueueTail(Queue) J1939_QueueAmong(Queue, Queue->Count)
 J1939_Status_t J1939_Enqueue(J1939_Queue_t Queue, void *Obj);
 J1939_Status_t J1939_Dequeue(J1939_Queue_t Queue, const uint32_t Serial);
 J1939_Status_t J1939_QueueClear(J1939_Queue_t Queue);

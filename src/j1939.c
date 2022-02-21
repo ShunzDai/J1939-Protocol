@@ -21,7 +21,7 @@
 #include "src/protocol/j1939_protocol.h"
 
 /* J1939 register struct */
-typedef J1939_Queue_t * J1939_Register_t;
+typedef J1939_Queue_t J1939_Register_t;
 
 /* J1939 handle struct */
 struct J1939{
@@ -29,9 +29,9 @@ struct J1939{
   char *Name;
   uint8_t SelfAddress;
   J1939_Queue_t TxFIFO;
-  #if J1939_ENABLE_TRANSPORT_PROTOCOL
+  #if J1939_TRANSPORT_PROTOCOL_ENABLE
   J1939_Protocol_t Protocol;
-  #endif /* J1939_ENABLE_TRANSPORT_PROTOCOL */
+  #endif /* J1939_TRANSPORT_PROTOCOL_ENABLE */
 };
 
 J1939_Status_t J1939_AppSoftwareFilter(J1939_t Handle, J1939_Message_t Msg);
@@ -45,6 +45,8 @@ static J1939_Status_t J1939_Transmit(J1939_t Handle);
 static J1939_Status_t J1939_Receive(J1939_t Handle);
 static J1939_Status_t J1939_TransmitSplit(J1939_t Handle, J1939_Message_t Msg);
 static J1939_Status_t J1939_ReceiveSplit(J1939_t Handle, J1939_Message_t Msg);
+
+static J1939_Register_t Register = NULL;
 
 /**
   * @brief  Check the software FIFO and transmit the message
@@ -124,11 +126,11 @@ static J1939_Status_t J1939_Receive(J1939_t Handle){
 static J1939_Status_t J1939_TransmitSplit(J1939_t Handle, J1939_Message_t Msg){
   if (Msg->Length <= J1939_SIZE_CAN_BUFFER)
     return J1939_Enqueue(Handle->TxFIFO, Msg);
-  #if J1939_ENABLE_TRANSPORT_PROTOCOL
+  #if J1939_TRANSPORT_PROTOCOL_ENABLE
   return J1939_ProtocolTransmitManager(Handle->Protocol, Msg);
-  #else /* J1939_ENABLE_TRANSPORT_PROTOCOL */
+  #else /* J1939_TRANSPORT_PROTOCOL_ENABLE */
   return J1939_ERROR;
-  #endif /* J1939_ENABLE_TRANSPORT_PROTOCOL */
+  #endif /* J1939_TRANSPORT_PROTOCOL_ENABLE */
 }
 
 /**
@@ -138,23 +140,11 @@ static J1939_Status_t J1939_TransmitSplit(J1939_t Handle, J1939_Message_t Msg){
   * @retval J1939 status
   */
 static J1939_Status_t J1939_ReceiveSplit(J1939_t Handle, J1939_Message_t Msg){
-  #if J1939_ENABLE_TRANSPORT_PROTOCOL
+  #if J1939_TRANSPORT_PROTOCOL_ENABLE
   if (J1939_ProtocolReceiveManager(Handle->Protocol, Msg) == J1939_OK)
     return J1939_OK;
-  #endif /* J1939_ENABLE_TRANSPORT_PROTOCOL */
+  #endif /* J1939_TRANSPORT_PROTOCOL_ENABLE */
   return J1939_AppDecodePayload(Handle, Msg);
-}
-
-/**
-  * @brief  Return J1939 handle register
-  * @param  void
-  * @retval Handle register
-  */
-static J1939_Register_t Register(void){
-  static J1939_Queue_t Register = NULL;
-  if (Register == NULL)
-    Register = J1939_QueueCreate("register", J1939_SIZE_CAN_PORT, NULL, NULL);
-  return &Register;
 }
 
 /**
@@ -167,7 +157,10 @@ static J1939_Status_t J1939_Enregister(J1939_t Handle){
     J1939_LOG_ERROR("[Handle]A null pointer appears");
     return J1939_ERROR;
   }
-  return J1939_Enqueue(*Register(), Handle);
+	else if (Register == NULL)
+    Register = J1939_QueueCreate("register", J1939_SIZE_CAN_PORT, NULL, NULL);
+
+  return J1939_Enqueue(Register, Handle);
 }
 
 /**
@@ -180,14 +173,17 @@ static J1939_Status_t J1939_Deregister(J1939_t Handle){
     J1939_LOG_ERROR("[Handle]A null pointer appears");
     return J1939_ERROR;
   }
-  for (uint32_t i = J1939_QueueCount(*Register()); i >= 1; i--){
-    J1939_t Node = J1939_QueueAmong(*Register(), i);
+
+  for (uint32_t i = J1939_QueueCount(Register); i >= 1; i--){
+    J1939_t Node = J1939_QueueAmong(Register, i);
     if (Node == NULL){
       J1939_LOG_ERROR("[Handle]A null pointer appears");
       return J1939_ERROR;
     }
     else if (Node == Handle){
-      J1939_Dequeue(*Register(), i);
+      J1939_Dequeue(Register, i);
+			if (J1939_QueueCount(Register) == 0)
+				J1939_QueueDelete(&Register);
       return J1939_OK;
     }
   }
@@ -224,7 +220,7 @@ J1939_t J1939_HandleCreate(char *Name, uint8_t SelfAddress, uint32_t QueueSize){
 
   #define J1939_REGISTER(Key)\
   do{\
-    if (strcmp(Name, #Key) == 0){\
+    if (J1939_strcmp(Name, #Key) == 0){\
       Handle->Port = &Key;\
     }\
   }while(0)
@@ -254,7 +250,7 @@ J1939_t J1939_HandleCreate(char *Name, uint8_t SelfAddress, uint32_t QueueSize){
     return NULL;
   }
 
-  #if J1939_ENABLE_TRANSPORT_PROTOCOL
+  #if J1939_TRANSPORT_PROTOCOL_ENABLE
   Handle->Protocol = J1939_ProtocolCreate();
   if (Handle->Protocol == NULL){
     J1939_LOG_ERROR("[Handle]A null pointer appears");
@@ -264,7 +260,7 @@ J1939_t J1939_HandleCreate(char *Name, uint8_t SelfAddress, uint32_t QueueSize){
     Handle = NULL;
     return NULL;
   }
-  #endif /* J1939_ENABLE_TRANSPORT_PROTOCOL */
+  #endif /* J1939_TRANSPORT_PROTOCOL_ENABLE */
 
   J1939_Enregister(Handle);
 
@@ -287,15 +283,12 @@ J1939_Status_t J1939_HandleDelete(J1939_t *Handle){
   }
   else{
     J1939_LOG_INFO("[Handle]'%s' has been deleted", (*Handle)->Name);
-    #if J1939_ENABLE_TRANSPORT_PROTOCOL
+    #if J1939_TRANSPORT_PROTOCOL_ENABLE
     J1939_ProtocolDelete(&(*Handle)->Protocol);
-    #endif /* J1939_ENABLE_TRANSPORT_PROTOCOL */
+    #endif /* J1939_TRANSPORT_PROTOCOL_ENABLE */
     J1939_QueueDelete(&(*Handle)->TxFIFO);
     J1939_PortDeInit((*Handle)->Port);
     J1939_Deregister(*Handle);
-    if (J1939_QueueCount(*Register()) == 0){
-      J1939_QueueDelete(Register());
-    }
     J1939_free(*Handle);
     *Handle = NULL;
     return J1939_OK;
@@ -327,15 +320,25 @@ J1939_Status_t J1939_SetSelfAddress(J1939_t Handle, uint8_t SelfAddress){
   return J1939_OK;
 }
 
+J1939_Status_t J1939_GetProtocolStatus(J1939_t Handle){
+  #if J1939_TRANSPORT_PROTOCOL_ENABLE
+  return J1939_ProtocolStatus(Handle->Protocol);
+  #endif /* J1939_TRANSPORT_PROTOCOL_ENABLE */
+  return J1939_ERROR;
+}
+
 /**
   * @brief  J1939 task handler, put it in a timer with a period of 5 milliseconds
   * @param  void
   * @retval J1939 status(reserved)
   */
 J1939_Status_t J1939_TaskHandler(void){
-  for (uint32_t i = J1939_QueueCount(*Register()); i >= 1; i--){
-    J1939_t Handle = J1939_QueueAmong(*Register(), i);
-    #if J1939_ENABLE_TRANSPORT_PROTOCOL
+	if (Register == NULL)
+		return J1939_OK;
+
+  for (uint32_t i = J1939_QueueCount(Register); i >= 1; i--){
+    J1939_t Handle = J1939_QueueAmong(Register, i);
+    #if J1939_TRANSPORT_PROTOCOL_ENABLE
     J1939_Message_t Msg = NULL;
     switch (J1939_ProtocolTaskHandler(Handle->Protocol, &Msg)){
       case J1939_TRANSMIT:
@@ -351,10 +354,11 @@ J1939_Status_t J1939_TaskHandler(void){
         break;
     }
     J1939_MessageDelete(&Msg);
-    #endif /* J1939_ENABLE_TRANSPORT_PROTOCOL */
+    #endif /* J1939_TRANSPORT_PROTOCOL_ENABLE */
     J1939_Transmit(Handle);
     J1939_Receive(Handle);
   }
+
   return J1939_OK;
 }
 
@@ -374,4 +378,19 @@ J1939_Status_t J1939_SendMessage(J1939_t Handle, J1939_Message_t Msg){
     Msg->PDU.SourceAddress = Handle->SelfAddress;
 
   return J1939_TransmitSplit(Handle, Msg);
+}
+
+/**
+  * @brief  Send a message from a J1939 handle
+  * @param  Handle J1939 handle
+  * @param  ID CAN ID
+  * @param  Length Message length
+  * @param  Payload A pointer to a payload, can be a null printer(will send 0x00)
+  * @retval J1939 status
+  */
+J1939_Status_t J1939_Send(J1939_t Handle, const uint32_t ID, const uint16_t Length, const void *Payload){
+  J1939_Message_t Msg = J1939_MessageCreate(ID, Length, Payload);
+  J1939_Status_t Status = J1939_SendMessage(Handle, Msg);
+  J1939_MessageDelete(&Msg);
+  return Status;
 }

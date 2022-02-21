@@ -13,12 +13,10 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#include "src/common/j1939_typedef.h"
-#include "src/port/j1939_memory.h"
-#include "j1939_config.h"
 #include "j1939.h"
+#include "j1939_config.h"
 
-__weak J1939_Status_t J1939_AppSoftwareFilter(J1939_t Handle, J1939_Message_t Msg){
+J1939_WEAK J1939_Status_t J1939_AppSoftwareFilter(J1939_t Handle, J1939_Message_t Msg){
   /* Config software filter rules START */
   if (Msg->PDU.PDUFormat >= J1939_ADDRESS_DIVIDE)/* PDU2 */
     return J1939_OK;
@@ -31,7 +29,7 @@ __weak J1939_Status_t J1939_AppSoftwareFilter(J1939_t Handle, J1939_Message_t Ms
   /* Config software filter rules END */
 }
 
-__weak J1939_Status_t J1939_AppDecodePayload(J1939_t Handle, J1939_Message_t Msg){
+J1939_WEAK J1939_Status_t J1939_AppDecodePayload(J1939_t Handle, J1939_Message_t Msg){
   /* User define START */
   switch(J1939_GetPGN(Msg->ID)){
 
@@ -49,7 +47,7 @@ __weak J1939_Status_t J1939_AppDecodePayload(J1939_t Handle, J1939_Message_t Msg
 /**
   * @brief This function handles message sending interrupt.
   */
-__weak J1939_Status_t J1939_AppSendingCallBack(J1939_t Handle, J1939_Message_t Msg){
+J1939_WEAK J1939_Status_t J1939_AppSendingCallBack(J1939_t Handle, J1939_Message_t Msg){
   /* User define START */
   J1939_LOG("[%s]TX 0x%08X ", J1939_GetPortName(Handle), Msg->ID);
   for (uint32_t i = 0; i < Msg->Length; i++)
@@ -62,7 +60,7 @@ __weak J1939_Status_t J1939_AppSendingCallBack(J1939_t Handle, J1939_Message_t M
 /**
   * @brief This function handles message missing interrupt.
   */
-__weak J1939_Status_t J1939_AppMissingCallBack(J1939_t Handle, J1939_Message_t Msg){
+J1939_WEAK J1939_Status_t J1939_AppMissingCallBack(J1939_t Handle, J1939_Message_t Msg){
   /* User define START */
   J1939_LOG_ERROR("[%s]TX Message missing(0x%08X)", J1939_GetPortName(Handle), Msg->ID);
   /* User define END */
@@ -72,7 +70,7 @@ __weak J1939_Status_t J1939_AppMissingCallBack(J1939_t Handle, J1939_Message_t M
 /**
   * @brief This function handles message reading interrupt.
   */
-__weak J1939_Status_t J1939_AppReadingCallBack(J1939_t Handle, J1939_Message_t Msg){
+J1939_WEAK J1939_Status_t J1939_AppReadingCallBack(J1939_t Handle, J1939_Message_t Msg){
   /* User define START */
 
   /* User define END */
@@ -82,7 +80,7 @@ __weak J1939_Status_t J1939_AppReadingCallBack(J1939_t Handle, J1939_Message_t M
 /**
   * @brief This function handles message timeout interrupt.
   */
-__weak J1939_Status_t J1939_AppTimeoutCallBack(J1939_t Handle, J1939_Message_t Msg){
+J1939_WEAK J1939_Status_t J1939_AppTimeoutCallBack(J1939_t Handle, J1939_Message_t Msg){
   /* User define START */
   J1939_LOG_ERROR("[%s]timeout(PGN 0x%08X)", J1939_GetPortName(Handle), Msg->ID);
   /* User define END */

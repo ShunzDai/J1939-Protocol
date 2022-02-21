@@ -18,7 +18,7 @@
 #include "src/port/j1939_memory.h"
 
 /* Virtual bus struct */
-typedef J1939_Queue_t * J1939_VirtualBus_t;
+typedef J1939_Queue_t J1939_VirtualBus_t;
 
 /* Virtual node struct */
 struct J1939_VirtualNode{
@@ -35,17 +35,7 @@ struct J1939_VirtualNode{
 
 #if __J1939_Port(VIRTUAL)
 
-/**
-  * @brief  Return virtual bus
-  * @param  void
-  * @retval Virtual bus
-  */
-static J1939_VirtualBus_t VirtualBus(void){
-  static J1939_Queue_t Bus = NULL;
-  if (Bus == NULL)
-    Bus = J1939_QueueCreate("vbus", J1939_SIZE_VIRTUAL_NODE, NULL, NULL);
-  return &Bus;
-}
+static J1939_VirtualBus_t VirtualBus = NULL;
 
 /**
   * @brief  Set a virtual node online
@@ -53,7 +43,14 @@ static J1939_VirtualBus_t VirtualBus(void){
   * @retval J1939 status
   */
 static J1939_Status_t J1939_Online(J1939_VirtualNode_t Virtual){
-  return J1939_Enqueue(*VirtualBus(), Virtual);
+	if (Virtual == NULL){
+    J1939_LOG_ERROR("[Virtual]A null pointer appears");
+    return J1939_ERROR;
+  }
+	else if (VirtualBus == NULL)
+		VirtualBus = J1939_QueueCreate("vbus", J1939_SIZE_VIRTUAL_PORT, NULL, NULL);
+	
+  return J1939_Enqueue(VirtualBus, Virtual);
 }
 
 /**
@@ -62,14 +59,16 @@ static J1939_Status_t J1939_Online(J1939_VirtualNode_t Virtual){
   * @retval J1939 status
   */
 static J1939_Status_t J1939_Offine(J1939_VirtualNode_t Virtual){
-  for (uint32_t i = J1939_QueueCount(*VirtualBus()); i >= 1; i--){
-    J1939_VirtualNode_t Node = J1939_QueueAmong(*VirtualBus(), i);
+  for (uint32_t i = J1939_QueueCount(VirtualBus); i >= 1; i--){
+    J1939_VirtualNode_t Node = J1939_QueueAmong(VirtualBus, i);
     if (Node == NULL){
       J1939_LOG_ERROR("[Virtual]A null pointer appears");
       return J1939_ERROR;
     }
     else if (Node == Virtual){
-      J1939_Dequeue(*VirtualBus(), i);
+      J1939_Dequeue(VirtualBus, i);
+			if (J1939_QueueCount(VirtualBus) == 0)
+				J1939_QueueDelete(&VirtualBus);
       return J1939_OK;
     }
   }
@@ -119,9 +118,6 @@ J1939_Status_t J1939_VirtualNodeDelete(J1939_VirtualNode_t *Virtual){
   else{
     J1939_QueueDelete(&(*Virtual)->RxFIFO);
     J1939_Offine(*Virtual);
-    if (J1939_QueueCount(*VirtualBus()) == 0){
-      J1939_QueueDelete(VirtualBus());
-    }
     J1939_free(*Virtual);
     *Virtual = NULL;
     return J1939_OK;
@@ -168,8 +164,8 @@ J1939_Status_t J1939_VirtualAddTxMessage(J1939_VirtualNode_t Virtual, J1939_Mess
     return J1939_ERROR;
   }
 
-  for (uint32_t i = J1939_QueueCount(*VirtualBus()); i >= 1; i--){
-    J1939_VirtualNode_t Node = J1939_QueueAmong(*VirtualBus(), i);
+  for (uint32_t i = J1939_QueueCount(VirtualBus); i >= 1; i--){
+    J1939_VirtualNode_t Node = J1939_QueueAmong(VirtualBus, i);
     if (Node != NULL && Node != Virtual){
       J1939_Enqueue(Node->RxFIFO, Msg);
     }

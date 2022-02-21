@@ -22,17 +22,27 @@ extern "C"{
 #include <stdint.h>
 #include <string.h>
 
-#ifndef __weak
-#if defined(_MSC_FULL_VER)
-#define __weak
-#elif defined(__ARMCC_VERSION)
-#define __weak   __attribute__((weak))
-#elif defined(__GNUC__)
-#define __weak   __attribute__((weak))
-#else
-#define __weak
+#if defined(__UINTPTR_MAX__) && __UINTPTR_MAX__ > 0xFFFFFFFF
+#define J1939_ARCH_64
+
+#elif defined(UINTPTR_MAX) && UINTPTR_MAX > 0xFFFFFFFF
+#define J1939_ARCH_64
+
+// Otherwise use compiler-dependent means to determine arch size
+#elif defined(_WIN64) || defined(__x86_64__) || defined(__ppc64__) || defined (__aarch64__)
+#define J1939_ARCH_64
+
 #endif
-#endif /* __weak */
+
+#if defined(_MSC_FULL_VER)
+#define J1939_WEAK __weak
+#elif defined(__ARMCC_VERSION)
+#define J1939_WEAK   __attribute__((weak))
+#elif defined(__GNUC__)
+#define J1939_WEAK   __attribute__((weak))
+#else
+#define J1939_WEAK
+#endif
 
 /* J1939 common status */
 typedef enum{
@@ -43,8 +53,6 @@ typedef enum{
   J1939_TRANSMIT                            = 0x04U,
   J1939_RECEIVED                            = 0x05U,
 }J1939_Status_t;
-
-typedef J1939_Status_t (*J1939_FuncPtr_t)(void* argument);
 
 #ifdef __cplusplus
 }

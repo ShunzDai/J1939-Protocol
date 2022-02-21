@@ -15,18 +15,10 @@
   */
 #include "j1939_protocol.h"
 #include "j1939_config.h"
-#include "src/message/j1939_message.h"
 #include "src/port/j1939_memory.h"
 #include "src/port/j1939_port.h"
 
-#if J1939_ENABLE_TRANSPORT_PROTOCOL
-
-/* Reference SAE J1939-21 5.10.1.1 */
-/* min size = 9, max size = 1785 */
-#define J1939_TP_BUFFER_SIZE                1785
-#define J1939_TP_DEFAULT_PRIORITY           0x07
-
-#define J1939_TP_BAM_TX_INTERVAL            50
+#if J1939_TRANSPORT_PROTOCOL_ENABLE
 
 #define __GetTotalPackets(Length)           (((Length) % 7 == 0) ? ((Length)/7) : (((Length) - (Length) % 7)/7 + 1))
 #define __GetLastSection(Length)            (((Length) % 7 == 0) ? (7) : ((Length) % 7))
@@ -36,7 +28,6 @@
 typedef enum J1939_TP_Status{
   /* Ready to transmit/receive Transport Protocol messages */
   J1939_TP_READY,
-  J1939_TP_TIMEOUT,
   J1939_TP_COMPLETE_TX,
   J1939_TP_COMPLETE_RX,
   J1939_TP_CM_BAM_TX,
@@ -190,8 +181,10 @@ static J1939_Status_t J1939_TP_DT_TransmitManager(J1939_Protocol_t Protocol, J19
 static J1939_Status_t J1939_TP_DT_ReceiveManager(J1939_Protocol_t Protocol, J1939_Message_t Msg){
   if (Protocol->Status != J1939_TP_DT_BAM_RX && Protocol->Status != J1939_TP_DT_CMDT_RX)
     return J1939_ERROR;
-  else if (Protocol->PacketsCount + 1 != Msg->Payload[0])
+  else if (Protocol->PacketsCount + 1 != Msg->Payload[0]){
+    /* TODO: TP_CM_CTS_TX */
     return J1939_ERROR;
+  }
 
   uint8_t Section = J1939_SIZE_CAN_BUFFER - 1;
 
@@ -231,7 +224,7 @@ static J1939_Status_t J1939_TP_DT_CMDT_TransmitManager(J1939_Protocol_t Protocol
   if (Protocol->ResponsePackets--)
     return J1939_TP_DT_TransmitManager(Protocol, MsgPtr);
 
-  Protocol->Status = (Protocol->PacketsCount == Protocol->TotalPackets) ? J1939_TP_CM_ACK_RX : J1939_TP_CM_CTS_RX;
+  Protocol->Status = J1939_TP_CM_CTS_RX;
   Protocol->Tick = J1939_PortGetTick();
 
   return J1939_OK;
@@ -258,6 +251,8 @@ static J1939_Status_t J1939_TP_CM_RTS_TransmitManager(J1939_Protocol_t Protocol,
 }
 
 static J1939_Status_t J1939_TP_CM_RTS_ReceiveManager(J1939_Protocol_t Protocol, J1939_Message_t Msg){
+  if (Protocol->Status != J1939_TP_READY)
+    return J1939_ERROR;
   Protocol->Buffer = J1939_MessageCreate(0, ((J1939_RTS_t *)Msg->Payload)->MessageSize, NULL);
   Protocol->Buffer->PDU.SourceAddress = Msg->PDU.SourceAddress;
   Protocol->Buffer->PDU.PDUSpecific = Msg->PDU.PDUSpecific;
@@ -292,6 +287,8 @@ static J1939_Status_t J1939_TP_CM_CTS_TransmitManager(J1939_Protocol_t Protocol,
 }
 
 static J1939_Status_t J1939_TP_CM_CTS_ReceiveManager(J1939_Protocol_t Protocol, J1939_Message_t Msg){
+  if (Protocol->Status != J1939_TP_CM_CTS_RX)
+    return J1939_ERROR;
   /* TODO: check PGN and next sequence */
 
   Protocol->ResponsePackets = ((J1939_CTS_t *)Msg->Payload)->ResponsePackets;
@@ -323,6 +320,9 @@ static J1939_Status_t J1939_TP_CM_ACK_TransmitManager(J1939_Protocol_t Protocol,
 }
 
 static J1939_Status_t J1939_TP_CM_ACK_ReceiveManager(J1939_Protocol_t Protocol, J1939_Message_t Msg){
+  if (Protocol->Status != J1939_TP_CM_ACK_RX)
+    return J1939_ERROR;
+
   Protocol->Status = J1939_TP_COMPLETE_TX;
   return J1939_OK;
 }
@@ -348,6 +348,9 @@ static J1939_Status_t J1939_TP_CM_BAM_TransmitManager(J1939_Protocol_t Protocol,
 }
 
 static J1939_Status_t J1939_TP_CM_BAM_ReceiveManager(J1939_Protocol_t Protocol, J1939_Message_t Msg){
+  if (Protocol->Status != J1939_TP_READY)
+    return J1939_ERROR;
+
   Protocol->Buffer = J1939_MessageCreate(0, ((J1939_RTS_t *)Msg->Payload)->MessageSize, NULL);
   Protocol->Buffer->PDU.SourceAddress = Msg->PDU.SourceAddress;
   Protocol->Buffer->PDU.PDUSpecific = Msg->PDU.PDUSpecific;
@@ -437,6 +440,8 @@ J1939_Status_t J1939_ProtocolDelete(J1939_Protocol_t *Protocol){
 J1939_Status_t J1939_ProtocolTransmitManager(J1939_Protocol_t Protocol, J1939_Message_t Msg){
   if (Protocol->Status != J1939_TP_READY)
     return J1939_BUSY;
+  else if (Msg->Length > J1939_TP_BUFFER_SIZE)
+    return J1939_ERROR;
 
   Protocol->Buffer = J1939_MessageCopy(Msg);
   Protocol->TotalPackets = __GetTotalPackets(Msg->Length);
@@ -503,4 +508,10 @@ J1939_Status_t J1939_ProtocolTaskHandler(J1939_Protocol_t Protocol, J1939_Messag
   }
 }
 
-#endif /* J1939_ENABLE_TRANSPORT_PROTOCOL */
+J1939_Status_t J1939_ProtocolStatus(J1939_Protocol_t Protocol){
+  if (Protocol->Status == J1939_TP_READY)
+    return J1939_OK;
+  return J1939_BUSY;
+}
+
+#endif /* J1939_TRANSPORT_PROTOCOL_ENABLE */
