@@ -43,13 +43,13 @@ static J1939_VirtualBus_t VirtualBus = NULL;
   * @retval J1939 status
   */
 static J1939_Status_t J1939_Online(J1939_VirtualNode_t Virtual){
-	if (Virtual == NULL){
+  if (Virtual == NULL){
     J1939_LOG_ERROR("[Virtual]A null pointer appears");
     return J1939_ERROR;
   }
-	else if (VirtualBus == NULL)
-		VirtualBus = J1939_QueueCreate("vbus", J1939_SIZE_VIRTUAL_PORT, NULL, NULL);
-	
+  else if (VirtualBus == NULL)
+    VirtualBus = J1939_QueueCreate("vbus", J1939_SIZE_VIRTUAL_PORT, NULL, NULL);
+
   return J1939_Enqueue(VirtualBus, Virtual);
 }
 
@@ -67,8 +67,8 @@ static J1939_Status_t J1939_Offine(J1939_VirtualNode_t Virtual){
     }
     else if (Node == Virtual){
       J1939_Dequeue(VirtualBus, i);
-			if (J1939_QueueCount(VirtualBus) == 0)
-				J1939_QueueDelete(&VirtualBus);
+      if (J1939_QueueCount(VirtualBus) == 0)
+        J1939_QueueDelete(&VirtualBus);
       return J1939_OK;
     }
   }

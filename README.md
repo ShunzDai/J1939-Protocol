@@ -11,9 +11,7 @@
 
 - 较高的可移植性. 本项目对接硬件衔接层的接口文件为[src/port/j1939_port.c](src/port/j1939_port.c)和[src/port/j1939_port.h](src/port/j1939_port.h)，用户可在[config/j1939_config.h](config/j1939_config.h)中选择硬件衔接层接口.
 
-![STM32串口](doc\figure\微信截图_20220212191614.png)
-
-- 较高的封装程度. 本项目封装了大部分内部处理函数与数据结构，对外仅留出必要的用户接口
+- 较高的封装程度. 本项目封装了大部分内部处理函数与数据结构，对外仅留出必要的用户接口.
 
 <center>
 
@@ -40,7 +38,7 @@
 | `J1939_SetSelfAdderess` | 设置设备地址 | J1939控制句柄，设备地址 | J1939状态 |
 | `J1939_GetSelfAdderess` | 获取设备地址 | J1939控制句柄 | 设备地址 |
 | `J1939_GetProtocolStatus` | 如果使能多帧传输协议则返回当前协议状态，否则返回错误状态 | J1939控制句柄 | J1939状态 |
-| `J1939_TaskHandler` | J1939任务处理，推荐5ms调用一次 | 无 | J1939状态 |
+| `J1939_TaskHandler` | 主控函数，用来进行J1939任务处理. 推荐5ms调用一次 | 无 | J1939状态 |
 | `J1939_SendMessage` | 用一个J1939控制句柄发送一个J1939消息(长短报文复用此消息发送方法) | J1939控制句柄，J1939消息 | J1939状态 |
 | `J1939_Send` | 对J1939消息创建、发送、释放的封装 | J1939控制句柄，消息ID，消息长度，载荷指针 | J1939状态 |
 
@@ -49,8 +47,6 @@
 - 较高的复用程度. 消息创建方法`J1939_MessageCreate()`与消息发送方法`J1939_SendMessage()`利用动态数组实现了长短报文消息创建&发送机制的复用；消息发送队列`J1939_t::TxFIFO`、虚拟总线`J1939_VirtualBus_t`、虚拟节点`J1939_VirtualNode_t`与J1939控制句柄注册器`J1939_Register_t`复用了`J1939_Queue_t`结构对应的系列方法，实现了J1939消息入队&出队、虚拟节点上线&下线、J1939控制句柄注册&注销等方法.
 
 - 虚拟总线. 协议可通过[config/j1939_config.h](config/j1939_config.h)配置硬件衔接层为虚拟总线. 虚拟总线使得脱离硬件环境进行纯软件调试成为可能. 在虚拟总线的辅助下，用户可以方便的进行内存泄漏检测、收发回环测试、多帧消息传输协议测试，规避了调试不便的交叉编译应用场景.
-
-![虚拟总线](doc\figure\微信截图_20220212191011.png)
 
 - Debug log宏. 通过在config文件中设置`J1939_LOG_ENABLE`宏开启log打印功能. 调整log接口宏可指定log打印方法，将log输出到控制台、串口或者文件.
 
@@ -82,6 +78,8 @@
 | `TimeoutCallBack` | 多帧传输协议超时回调 | J1939控制句柄，J1939消息 | J1939状态 |
 
 </center>
+
+接收消息时，功能函数的优先级由高至低依次是`ReadingCallBack` `SoftwareFilter` `DecodePayload`，即优先判定是否接收到消息，然后进行滤波，最后进行解码. 如果使能了多帧传输协议，且接收到的消息属于TP CM，则这一帧消息将在通过软件滤波器后直接入栈，不再经过解码功能函数.
 
 5. 在工程中`#include "j1939.h"`以调用本项目提供的接口.
 
@@ -133,3 +131,5 @@
 ## 参考文献
 
 [1]丁海涛, 杨建森. SAE J1939协议[DB/OL]. [Link](http://blog.gitdns.org/2017/12/05/j1939-pctool/ourdev_509914(SAE-J1939).pdf), 2008年10月30日, 2022年02月02日
+[2]Simma Software, Inc. Understanding SAE J1939[DB/OL]. [Link](https://www.simmasoftware.com/j1939-presentation.pdf), 2016年01月14日, 2022年02月12日
+[3]宋超超. AUTOSAR架构的CAN通信配置之CANTP和J1939TP模块[DB/OL]. [Link](https://neyzoter.cn/2020/01/15/AUTOSAR-Can-J1939TPandCANTP-Conf/), 2020年01月15日, 2022年02月21日

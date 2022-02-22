@@ -157,7 +157,7 @@ static J1939_Status_t J1939_Enregister(J1939_t Handle){
     J1939_LOG_ERROR("[Handle]A null pointer appears");
     return J1939_ERROR;
   }
-	else if (Register == NULL)
+  else if (Register == NULL)
     Register = J1939_QueueCreate("register", J1939_SIZE_CAN_PORT, NULL, NULL);
 
   return J1939_Enqueue(Register, Handle);
@@ -182,8 +182,8 @@ static J1939_Status_t J1939_Deregister(J1939_t Handle){
     }
     else if (Node == Handle){
       J1939_Dequeue(Register, i);
-			if (J1939_QueueCount(Register) == 0)
-				J1939_QueueDelete(&Register);
+      if (J1939_QueueCount(Register) == 0)
+        J1939_QueueDelete(&Register);
       return J1939_OK;
     }
   }
@@ -333,11 +333,12 @@ J1939_Status_t J1939_GetProtocolStatus(J1939_t Handle){
   * @retval J1939 status(reserved)
   */
 J1939_Status_t J1939_TaskHandler(void){
-	if (Register == NULL)
-		return J1939_OK;
+  if (Register == NULL)
+    return J1939_OK;
 
   for (uint32_t i = J1939_QueueCount(Register); i >= 1; i--){
     J1939_t Handle = J1939_QueueAmong(Register, i);
+    J1939_Receive(Handle);
     #if J1939_TRANSPORT_PROTOCOL_ENABLE
     J1939_Message_t Msg = NULL;
     switch (J1939_ProtocolTaskHandler(Handle->Protocol, &Msg)){
@@ -356,7 +357,6 @@ J1939_Status_t J1939_TaskHandler(void){
     J1939_MessageDelete(&Msg);
     #endif /* J1939_TRANSPORT_PROTOCOL_ENABLE */
     J1939_Transmit(Handle);
-    J1939_Receive(Handle);
   }
 
   return J1939_OK;
