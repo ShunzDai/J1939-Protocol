@@ -206,26 +206,9 @@ J1939_t J1939_HandleCreate(char *Name, uint8_t SelfAddress, uint32_t QueueSize){
   }
 
   J1939_t Handle = (J1939_t)J1939_malloc(sizeof(struct J1939));
-  if (Handle == NULL){
-    J1939_LOG_ERROR("[Handle]A null pointer appears");
-    return NULL;
-  }
 
-  Handle->Name = Name;
-  Handle->SelfAddress = SelfAddress;
-
-  #ifndef J1939_REGISTER
-  #undef J1939_REGISTER
-  #endif /* J1939_REGISTER */
-
-  #define J1939_REGISTER(Key)\
-  do{\
-    if (J1939_strcmp(Name, #Key) == 0){\
-      Handle->Port = &Key;\
-    }\
-  }while(0)
-  #include "j1939_register.inc"
-  #undef J1939_REGISTER
+  #define J1939_PORT_HANDLE_CREATE
+  #include "j1939_port.inc"
 
   if (Handle->Port == NULL){
     J1939_LOG_ERROR("[Handle]'%s' does not exist, create failed", Name);
@@ -241,30 +224,17 @@ J1939_t J1939_HandleCreate(char *Name, uint8_t SelfAddress, uint32_t QueueSize){
     return NULL;
   }
 
+  Handle->Name = Name;
+  Handle->SelfAddress = SelfAddress;
   Handle->TxFIFO = J1939_QueueCreate(Name, QueueSize, J1939_MessageCopy, J1939_MessageDelete);
-  if (Handle->TxFIFO == NULL){
-    J1939_LOG_ERROR("[Handle]A null pointer appears");
-    J1939_PortDeInit(Handle->Port);
-    J1939_free(Handle);
-    Handle = NULL;
-    return NULL;
-  }
-
   #if J1939_TRANSPORT_PROTOCOL_ENABLE
   Handle->Protocol = J1939_ProtocolCreate();
-  if (Handle->Protocol == NULL){
-    J1939_LOG_ERROR("[Handle]A null pointer appears");
-    J1939_PortDeInit(Handle->Port);
-    J1939_QueueDelete(&Handle->TxFIFO);
-    J1939_free(Handle);
-    Handle = NULL;
-    return NULL;
-  }
   #endif /* J1939_TRANSPORT_PROTOCOL_ENABLE */
 
   J1939_Enregister(Handle);
 
   J1939_LOG_INFO("[Handle]'%s' has been created", Name);
+
   return Handle;
 }
 
@@ -283,6 +253,7 @@ J1939_Status_t J1939_HandleDelete(J1939_t *Handle){
   }
   else{
     J1939_LOG_INFO("[Handle]'%s' has been deleted", (*Handle)->Name);
+
     #if J1939_TRANSPORT_PROTOCOL_ENABLE
     J1939_ProtocolDelete(&(*Handle)->Protocol);
     #endif /* J1939_TRANSPORT_PROTOCOL_ENABLE */
@@ -290,7 +261,9 @@ J1939_Status_t J1939_HandleDelete(J1939_t *Handle){
     J1939_PortDeInit((*Handle)->Port);
     J1939_Deregister(*Handle);
     J1939_free(*Handle);
+
     *Handle = NULL;
+
     return J1939_OK;
   }
 }
@@ -300,6 +273,7 @@ char *J1939_GetPortName(J1939_t Handle){
     J1939_LOG_ERROR("[Handle]A null pointer appears");
     return 0;
   }
+
   return Handle->Name;
 }
 
@@ -308,6 +282,7 @@ uint8_t J1939_GetSelfAddress(J1939_t Handle){
     J1939_LOG_ERROR("[Handle]A null pointer appears");
     return 0;
   }
+
   return Handle->SelfAddress;
 }
 
@@ -316,15 +291,23 @@ J1939_Status_t J1939_SetSelfAddress(J1939_t Handle, uint8_t SelfAddress){
     J1939_LOG_ERROR("[Handle]A null pointer appears");
     return J1939_ERROR;
   }
+
   Handle->SelfAddress = SelfAddress;
+
   return J1939_OK;
 }
 
 J1939_Status_t J1939_GetProtocolStatus(J1939_t Handle){
+  if (Handle == NULL){
+    J1939_LOG_ERROR("[Handle]A null pointer appears");
+    return J1939_ERROR;
+  }
+
   #if J1939_TRANSPORT_PROTOCOL_ENABLE
   return J1939_ProtocolStatus(Handle->Protocol);
-  #endif /* J1939_TRANSPORT_PROTOCOL_ENABLE */
+  #else /* J1939_TRANSPORT_PROTOCOL_ENABLE */
   return J1939_ERROR;
+  #endif /* J1939_TRANSPORT_PROTOCOL_ENABLE */
 }
 
 /**
@@ -373,7 +356,7 @@ J1939_Status_t J1939_SendMessage(J1939_t Handle, J1939_Message_t Msg){
     J1939_LOG_ERROR("[Handle]A null pointer appears");
     return J1939_ERROR;
   }
-  /* Check source address */
+
   if (Msg->PDU.SourceAddress != Handle->SelfAddress)
     Msg->PDU.SourceAddress = Handle->SelfAddress;
 

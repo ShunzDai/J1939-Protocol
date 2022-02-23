@@ -176,7 +176,7 @@ static J1939_Status_t J1939_TP_DT_TransmitManager(J1939_Protocol_t Protocol, J19
   }
 
   (*MsgPtr)->Payload[0] = Protocol->PacketsCount;
-  
+
   J1939_memcpy((*MsgPtr)->Payload + 1, Protocol->Buffer->Payload + __GetByteOffset(Protocol->PacketsCount), Section);
 
   Protocol->Tick = J1939_PortGetTick();
@@ -248,6 +248,7 @@ static J1939_Status_t J1939_TP_CM_RTS_TransmitManager(J1939_Protocol_t Protocol,
   ((J1939_RTS_t *)(*MsgPtr)->Payload)->Reserved = 0xFF;
 
   Protocol->Status = J1939_TP_CM_CTS_RX;
+
   Protocol->Tick = J1939_PortGetTick();
 
   return J1939_TRANSMIT;
@@ -256,13 +257,16 @@ static J1939_Status_t J1939_TP_CM_RTS_TransmitManager(J1939_Protocol_t Protocol,
 static J1939_Status_t J1939_TP_CM_RTS_ReceiveManager(J1939_Protocol_t Protocol, J1939_Message_t Msg){
   if (Protocol->Status != J1939_TP_READY)
     return J1939_ERROR;
+
   Protocol->Buffer = J1939_MessageCreate(0, ((J1939_RTS_t *)Msg->Payload)->MessageSize, NULL);
   Protocol->Buffer->PDU.SourceAddress = Msg->PDU.SourceAddress;
   Protocol->Buffer->PDU.PDUSpecific = Msg->PDU.PDUSpecific;
   J1939_SetPGN(&Protocol->Buffer->ID, ((J1939_RTS_t *)Msg->Payload)->PGN);
 
   Protocol->TotalPackets = ((J1939_RTS_t *)Msg->Payload)->TotalPackets;
+
   Protocol->Status = J1939_TP_CM_CTS_TX;
+
   Protocol->Tick = J1939_PortGetTick();
 
   return J1939_OK;
@@ -283,7 +287,9 @@ static J1939_Status_t J1939_TP_CM_CTS_TransmitManager(J1939_Protocol_t Protocol,
   ((J1939_CTS_t *)(*MsgPtr)->Payload)->ResponsePackets = (Protocol->TotalPackets - Protocol->PacketsCount <= J1939_TP_CM_CTS_RESPONSE) ? Protocol->TotalPackets - Protocol->PacketsCount : J1939_TP_CM_CTS_RESPONSE;
 
   Protocol->ResponsePackets = ((J1939_CTS_t *)(*MsgPtr)->Payload)->ResponsePackets;
+
   Protocol->Status = J1939_TP_DT_CMDT_RX;
+
   Protocol->Tick = J1939_PortGetTick();
 
   return J1939_TRANSMIT;
@@ -292,11 +298,15 @@ static J1939_Status_t J1939_TP_CM_CTS_TransmitManager(J1939_Protocol_t Protocol,
 static J1939_Status_t J1939_TP_CM_CTS_ReceiveManager(J1939_Protocol_t Protocol, J1939_Message_t Msg){
   if (Protocol->Status != J1939_TP_CM_CTS_RX)
     return J1939_ERROR;
-  /* TODO: check PGN and next sequence */
+  else if (J1939_GetPGN(Protocol->Buffer->ID) != ((J1939_CTS_t *)Msg->Payload)->PGN)
+    return J1939_ERROR;
+  else if (Protocol->PacketsCount + 1 != ((J1939_CTS_t *)Msg->Payload)->NextSequence)
+    return J1939_ERROR;
 
   Protocol->ResponsePackets = ((J1939_CTS_t *)Msg->Payload)->ResponsePackets;
 
   Protocol->Status = J1939_TP_DT_CMDT_TX;
+
   Protocol->Tick = J1939_PortGetTick();
 
   return J1939_OK;
@@ -317,6 +327,7 @@ static J1939_Status_t J1939_TP_CM_ACK_TransmitManager(J1939_Protocol_t Protocol,
   ((J1939_ACK_t *)(*MsgPtr)->Payload)->TotalPackets = Protocol->TotalPackets;
 
   Protocol->Status = J1939_TP_COMPLETE_RX;
+
   Protocol->Tick = J1939_PortGetTick();
 
   return J1939_TRANSMIT;
@@ -333,6 +344,7 @@ static J1939_Status_t J1939_TP_CM_ACK_ReceiveManager(J1939_Protocol_t Protocol, 
     return J1939_ERROR;
 
   Protocol->Status = J1939_TP_COMPLETE_TX;
+
   return J1939_OK;
 }
 
@@ -393,7 +405,7 @@ static J1939_Status_t J1939_TP_CM_ABORT_ReceiveManager(J1939_Protocol_t Protocol
   if (J1939_GetPGN(Protocol->Buffer->ID) != ((J1939_Abort_t *)Msg->Payload)->PGN)
     return J1939_ERROR;
 
-
+  
 
   return J1939_OK;
 }

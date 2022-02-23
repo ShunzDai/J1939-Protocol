@@ -131,5 +131,7 @@
 ## 参考文献
 
 [1]丁海涛, 杨建森. SAE J1939协议[DB/OL]. [Link](http://blog.gitdns.org/2017/12/05/j1939-pctool/ourdev_509914(SAE-J1939).pdf), 2008年10月30日, 2022年02月02日
+
 [2]Simma Software, Inc. Understanding SAE J1939[DB/OL]. [Link](https://www.simmasoftware.com/j1939-presentation.pdf), 2016年01月14日, 2022年02月12日
+
 [3]宋超超. AUTOSAR架构的CAN通信配置之CANTP和J1939TP模块[DB/OL]. [Link](https://neyzoter.cn/2020/01/15/AUTOSAR-Can-J1939TPandCANTP-Conf/), 2020年01月15日, 2022年02月21日

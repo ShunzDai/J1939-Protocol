@@ -120,18 +120,8 @@ J1939_Queue_t J1939_QueueCreate(char *Name, uint32_t QueueSize, void *CreateMeth
     J1939_LOG_WARN("[Queue]'%s' non delete method", Name);
 
   J1939_Queue_t Queue = (J1939_Queue_t)J1939_malloc(sizeof(struct J1939_Queue));
-  if (Queue == NULL){
-    J1939_LOG_ERROR("[Queue]A null pointer appears");
-    return NULL;
-  }
 
   Queue->List = J1939_NodeCreate(Name, NULL);
-  if (Queue->List == NULL){
-    J1939_LOG_ERROR("[Queue]A null pointer appears");
-    J1939_free(Queue);
-    Queue = NULL;
-    return NULL;
-  }
   Queue->Size = QueueSize;
   Queue->Count = 0;
   Queue->CreateMethod = (J1939_Method_t)CreateMethod;

@@ -27,13 +27,8 @@ struct J1939_VirtualNode;
 
 typedef struct J1939_VirtualNode * J1939_VirtualNode_t;
 
-#ifndef J1939_REGISTER
-#undef J1939_REGISTER
-#endif /* J1939_REGISTER */
-
-#define J1939_REGISTER(Key) extern J1939_VirtualNode_t Key
-#include "j1939_register.inc"
-#undef J1939_REGISTER
+#define J1939_PORT_VIRTUAL_EXTERN
+#include "j1939_port.inc"
 
 J1939_VirtualNode_t J1939_VirtualNodeCreate(void);
 J1939_Status_t J1939_VirtualNodeDelete(J1939_VirtualNode_t *Virtual);

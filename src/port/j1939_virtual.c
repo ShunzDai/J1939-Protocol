@@ -25,13 +25,8 @@ struct J1939_VirtualNode{
   J1939_Queue_t RxFIFO;
 };
 
-#ifndef J1939_REGISTER
-#undef J1939_REGISTER
-#endif /* J1939_REGISTER */
-
-#define J1939_REGISTER(Key) J1939_VirtualNode_t Key = NULL;
-#include "j1939_register.inc"
-#undef J1939_REGISTER
+#define J1939_PORT_VIRTUAL_CREATE;
+#include "j1939_port.inc"
 
 #if __J1939_Port(VIRTUAL)
 

@@ -57,22 +57,16 @@ J1939_Status_t J1939_SetPGN(uint32_t *PDU, const uint32_t PGN){
   */
 J1939_Message_t J1939_MessageCreate(const uint32_t ID, const uint16_t Length, const void *Payload){
   J1939_Message_t Msg = (J1939_Message_t)J1939_malloc(sizeof(struct J1939_Message));
-  if (Msg == NULL){
-    J1939_LOG_ERROR("[Message]A null pointer appears");
-    return NULL;
-  }
+
   Msg->ID = ID;
   Msg->Length = Length;
   Msg->Payload = J1939_malloc(Length);
-  if (Msg->Payload == NULL){
-    J1939_LOG_ERROR("[Message]A null pointer appears");
-    J1939_free(Msg);
-    Msg = NULL;
-  }
-  else if(Payload == NULL)
+
+  if(Payload == NULL)
     J1939_memset(Msg->Payload, 0, Length);
   else
     J1939_memcpy(Msg->Payload, (uint8_t *)Payload, Length);
+
   return Msg;
 }
 
@@ -96,8 +90,11 @@ J1939_Status_t J1939_MessageDelete(J1939_Message_t *MsgPtr){
       J1939_free((*MsgPtr)->Payload);
       (*MsgPtr)->Payload = NULL;
     }
+
     J1939_free(*MsgPtr);
+
     *MsgPtr = NULL;
+
     return J1939_OK;
   }
 }
@@ -112,6 +109,8 @@ J1939_Message_t J1939_MessageCopy(J1939_Message_t Msg){
     J1939_LOG_ERROR("[Message]A null pointer appears");
     return NULL;
   }
+
   J1939_Message_t Cpy = J1939_MessageCreate(Msg->ID, Msg->Length, Msg->Payload);
+  
   return Cpy;
 }
