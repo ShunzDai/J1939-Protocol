@@ -40,7 +40,9 @@ void thread_5ms(void){
 void thread_1000ms(void){
   static uint64_t tick;
   if (J1939_PortGetTick() - tick >= 100){
-    J1939_Message_t Msg = J1939_MessageCreate(0x18F00400, 8, "12345678");
+    J1939_Message_t Msg = J1939_MessageCreate(0x18F00400, 8,
+      "\x01\x02\x03\x04\x05\x06\x07\x08"
+    );
     J1939_SendMessage(Handle1, Msg);
     J1939_SendMessage(Handle2, Msg);
     J1939_MessageDelete(&Msg);

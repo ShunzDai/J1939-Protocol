@@ -43,7 +43,10 @@ void thread_1000ms(void){
   if (J1939_PortGetTick() - tick >= 100){
     if (J1939_GetProtocolStatus(Handle1) == J1939_OK){
       type = !type;
-      J1939_Send(Handle1, type ? 0x18E00201 : 0x18F00201, 52, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
+      J1939_Send(Handle1, type ? 0x18E00201 : 0x18F00201, 32,
+        "\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B\x0C\x0D\x0E\x0F\x10"
+        "\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F\x20"
+      );
     }
     tick = J1939_PortGetTick();
   }

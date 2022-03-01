@@ -15,7 +15,7 @@
   */
 #include "j1939_message.h"
 #include "j1939_config.h"
-#include "src/port/j1939_memory.h"
+#include "src/memory/j1939_memory.h"
 
 /**
   * @brief  Calculate PGN with CAN ID
@@ -111,6 +111,6 @@ J1939_Message_t J1939_MessageCopy(J1939_Message_t Msg){
   }
 
   J1939_Message_t Cpy = J1939_MessageCreate(Msg->ID, Msg->Length, Msg->Payload);
-  
+
   return Cpy;
 }

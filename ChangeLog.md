@@ -1,5 +1,13 @@
 # ChangeLog
 
+## 2022-02-28 build1006
+
+- 移动`src/port/j1939_memory.c/h`到`src/memory/j1939_memory.c/h`，移除LittleVGL的`memset` `memcpy`及其相关的宏定义，替换为rt-thread的实现
+- 新增TP CM abort的相关接口，但尚未暴露到用户层
+- 去除`virtual.c`多余的分号
+- 修改demo发送的载荷
+- 更新readme
+
 ## 2022-02-23 build1005
 
 本次更新内容如下

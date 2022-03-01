@@ -15,7 +15,7 @@
   */
 #include "j1939_protocol.h"
 #include "j1939_config.h"
-#include "src/port/j1939_memory.h"
+#include "src/memory/j1939_memory.h"
 #include "src/port/j1939_port.h"
 
 #if J1939_TRANSPORT_PROTOCOL_ENABLE
@@ -30,6 +30,7 @@ typedef enum J1939_TP_Status{
   J1939_TP_READY,
   J1939_TP_COMPLETE_TX,
   J1939_TP_COMPLETE_RX,
+  J1939_TP_CM_ABORT_TX,
   J1939_TP_CM_BAM_TX,
   J1939_TP_CM_RTS_TX,
   J1939_TP_CM_CTS_TX,
@@ -127,11 +128,12 @@ typedef struct J1939_Abort{
   uint64_t Reserved                         : 24;
   /* PGN */
   uint64_t PGN                              : 24;
-} J1939_Abort_t;
+} J1939_ABORT_t;
 
 struct J1939_Protocol{
   J1939_Message_t Buffer;
   J1939_TP_Status_t Status;
+  J1939_AbortReason_t AbortReason;
   uint8_t TotalPackets;
   uint8_t PacketsCount;
   uint8_t ResponsePackets;
@@ -393,19 +395,23 @@ static J1939_Status_t J1939_TP_CM_ABORT_TransmitManager(J1939_Protocol_t Protoco
   (*MsgPtr)->PDU.Priority = J1939_TP_DEFAULT_PRIORITY;
   J1939_SetPGN(&(*MsgPtr)->ID, J1939_PGN_TP_CM);
 
-  ((J1939_Abort_t *)(*MsgPtr)->Payload)->Control = J1939_CONTROL_ABORT;
-  ((J1939_Abort_t *)(*MsgPtr)->Payload)->Reason = 1;
-  ((J1939_Abort_t *)(*MsgPtr)->Payload)->Reserved = 0xFFFFFF;
-  ((J1939_Abort_t *)(*MsgPtr)->Payload)->PGN = J1939_GetPGN(Protocol->Buffer->ID);
+  ((J1939_ABORT_t *)(*MsgPtr)->Payload)->Control = J1939_CONTROL_ABORT;
+  ((J1939_ABORT_t *)(*MsgPtr)->Payload)->Reason = (uint8_t)Protocol->AbortReason;
+  ((J1939_ABORT_t *)(*MsgPtr)->Payload)->Reserved = 0xFFFFFF;
+  ((J1939_ABORT_t *)(*MsgPtr)->Payload)->PGN = J1939_GetPGN(Protocol->Buffer->ID);
+
+  J1939_memset(Protocol, 0, sizeof(struct J1939_Protocol));
 
   return J1939_OK;
 }
 
 static J1939_Status_t J1939_TP_CM_ABORT_ReceiveManager(J1939_Protocol_t Protocol, J1939_Message_t Msg){
-  if (J1939_GetPGN(Protocol->Buffer->ID) != ((J1939_Abort_t *)Msg->Payload)->PGN)
+  if (J1939_GetPGN(Protocol->Buffer->ID) != ((J1939_ABORT_t *)Msg->Payload)->PGN)
     return J1939_ERROR;
 
-  
+  J1939_MessageDelete(&Protocol->Buffer);
+
+  J1939_memset(Protocol, 0, sizeof(struct J1939_Protocol));
 
   return J1939_OK;
 }
@@ -519,6 +525,8 @@ J1939_Status_t J1939_ProtocolTaskHandler(J1939_Protocol_t Protocol, J1939_Messag
       return J1939_OK;
     case J1939_TP_COMPLETE_RX:
       return J1939_ProtocolPush(Protocol, MsgPtr, J1939_RECEIVED);
+    case J1939_TP_CM_ABORT_TX:
+      return J1939_TP_CM_ABORT_TransmitManager(Protocol, MsgPtr);
     case J1939_TP_CM_BAM_TX:/* TP BAM start */
       return J1939_TP_CM_BAM_TransmitManager(Protocol, MsgPtr);
     case J1939_TP_CM_RTS_TX:/* TP CMDT start */
@@ -546,6 +554,49 @@ J1939_Status_t J1939_ProtocolTaskHandler(J1939_Protocol_t Protocol, J1939_Messag
 
 J1939_Status_t J1939_ProtocolStatus(J1939_Protocol_t Protocol){
   return (Protocol->Status == J1939_TP_READY) ? J1939_OK : J1939_BUSY;
+}
+
+J1939_Status_t J1939_ProtocolAbort(J1939_Protocol_t Protocol, J1939_AbortReason_t AbortReason){
+  switch (Protocol->Status){
+    case J1939_TP_READY:
+      return J1939_ERROR;
+    case J1939_TP_COMPLETE_TX:
+      return J1939_ERROR;
+    case J1939_TP_COMPLETE_RX:
+      return J1939_ERROR;
+    case J1939_TP_CM_ABORT_TX:
+      Protocol->AbortReason = AbortReason;
+      return J1939_OK;
+    case J1939_TP_CM_BAM_TX:
+      return J1939_ERROR;
+    case J1939_TP_CM_RTS_TX:
+      Protocol->AbortReason = AbortReason;
+      return J1939_OK;
+    case J1939_TP_CM_CTS_TX:
+      Protocol->AbortReason = AbortReason;
+      return J1939_OK;
+    case J1939_TP_CM_CTS_RX:
+      Protocol->AbortReason = AbortReason;
+      return J1939_OK;
+    case J1939_TP_CM_ACK_TX:
+      Protocol->AbortReason = AbortReason;
+      return J1939_OK;
+    case J1939_TP_CM_ACK_RX:
+      Protocol->AbortReason = AbortReason;
+      return J1939_OK;
+    case J1939_TP_DT_BAM_TX:
+      return J1939_ERROR;
+    case J1939_TP_DT_BAM_RX:
+      return J1939_ERROR;
+    case J1939_TP_DT_CMDT_TX:
+      Protocol->AbortReason = AbortReason;
+      return J1939_OK;
+    case J1939_TP_DT_CMDT_RX:
+      Protocol->AbortReason = AbortReason;
+      return J1939_OK;
+    default:
+      return J1939_ERROR;
+  }
 }
 
 #endif /* J1939_TRANSPORT_PROTOCOL_ENABLE */

@@ -16,7 +16,7 @@
 #include "j1939.h"
 #include "j1939_config.h"
 #include "src/common/J1939_queue.h"
-#include "src/port/j1939_memory.h"
+#include "src/memory/j1939_memory.h"
 #include "src/port/j1939_port.h"
 #include "src/protocol/j1939_protocol.h"
 

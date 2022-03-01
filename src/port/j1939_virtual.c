@@ -15,7 +15,7 @@
   */
 #include "j1939_virtual.h"
 #include "j1939_config.h"
-#include "src/port/j1939_memory.h"
+#include "src/memory/j1939_memory.h"
 
 /* Virtual bus struct */
 typedef J1939_Queue_t J1939_VirtualBus_t;
@@ -25,7 +25,7 @@ struct J1939_VirtualNode{
   J1939_Queue_t RxFIFO;
 };
 
-#define J1939_PORT_VIRTUAL_CREATE;
+#define J1939_PORT_VIRTUAL_CREATE
 #include "j1939_port.inc"
 
 #if __J1939_Port(VIRTUAL)

@@ -15,7 +15,7 @@
   */
 #include "J1939_queue.h"
 #include "j1939_config.h"
-#include "src/port/j1939_memory.h"
+#include "src/memory/j1939_memory.h"
 
 /* Object's method */
 typedef void *(*J1939_Method_t)(void *Obj);

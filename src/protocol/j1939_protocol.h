@@ -22,6 +22,10 @@ extern "C" {
 #include "src/common/j1939_typedef.h"
 #include "src/message/j1939_message.h"
 
+typedef enum J1939_AbortReason{
+  J1939_AbortReason_None,
+} J1939_AbortReason_t;
+
 struct J1939_Protocol;
 
 typedef struct J1939_Protocol * J1939_Protocol_t;
@@ -34,6 +38,7 @@ J1939_Status_t J1939_ProtocolReceiveManager(J1939_Protocol_t Protocol, J1939_Mes
 J1939_Status_t J1939_ProtocolTaskHandler(J1939_Protocol_t Protocol, J1939_Message_t *MsgPtr);
 
 J1939_Status_t J1939_ProtocolStatus(J1939_Protocol_t Protocol);
+J1939_Status_t J1939_ProtocolAbort(J1939_Protocol_t Protocol, J1939_AbortReason_t AbortReason);
 
 #ifdef __cplusplus
 }

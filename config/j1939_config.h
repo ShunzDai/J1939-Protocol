@@ -22,11 +22,12 @@ extern "C"{
 #define J1939_PORT_SUSPEND                  0
 #define J1939_PORT_VIRTUAL                  1
 #define J1939_PORT_STM32                    2
-#define J1939_PORT_TYPE                     J1939_PORT_STM32
+#define J1939_PORT_TYPE                     J1939_PORT_SUSPEND
 #define __J1939_Port(val)                   (J1939_PORT_TYPE == J1939_PORT_##val)
 
 #define J1939_LOG_ENABLE                    1
 
+#define J1939_SIZE_MEMORY_POOL              0xFFFFFFFF
 /* CAN buffer size */
 #define J1939_SIZE_CAN_BUFFER               8
 /* CAN port size */
