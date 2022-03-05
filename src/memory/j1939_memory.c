@@ -114,7 +114,7 @@ void *J1939_memcpy(void *_Dst, const void *_Src, size_t _Size){
   char *src_ptr = (char *)_Src;
   long *aligned_dst;
   long *aligned_src;
-  int len = _Size;
+  uint32_t len = _Size;
 
   /* If the size is small, or either SRC or DST is unaligned, then punt into the byte copy loop.  This should be rare. */
   if (!TOO_SMALL(len) && !UNALIGNED(src_ptr, dst_ptr)){

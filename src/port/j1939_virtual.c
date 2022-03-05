@@ -54,7 +54,7 @@ static J1939_Status_t J1939_Online(J1939_VirtualNode_t Virtual){
   * @retval J1939 status
   */
 static J1939_Status_t J1939_Offine(J1939_VirtualNode_t Virtual){
-  for (uint32_t i = J1939_QueueCount(VirtualBus); i >= 1; i--){
+  for (uint32_t i = J1939_QueueCount(VirtualBus); i > 0; i--){
     J1939_VirtualNode_t Node = J1939_QueueAmong(VirtualBus, i);
     if (Node == NULL){
       J1939_LOG_ERROR("[Virtual]A null pointer appears");
@@ -159,7 +159,7 @@ J1939_Status_t J1939_VirtualAddTxMessage(J1939_VirtualNode_t Virtual, J1939_Mess
     return J1939_ERROR;
   }
 
-  for (uint32_t i = J1939_QueueCount(VirtualBus); i >= 1; i--){
+  for (uint32_t i = J1939_QueueCount(VirtualBus); i > 0; i--){
     J1939_VirtualNode_t Node = J1939_QueueAmong(VirtualBus, i);
     if (Node != NULL && Node != Virtual){
       J1939_Enqueue(Node->RxFIFO, Msg);

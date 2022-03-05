@@ -38,11 +38,11 @@ typedef struct J1939_PDU{
 
 /* Message struct */
 typedef struct J1939_Message{
+  uint16_t Length;
   union{
     J1939_PDU_t PDU;
     uint32_t ID;
   };
-  uint16_t Length;
   uint8_t *Payload;
 } * J1939_Message_t;
 

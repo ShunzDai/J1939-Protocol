@@ -1,5 +1,12 @@
 # ChangeLog
 
+## 2022-03-04 build1007
+
+- 重构cmake结构
+- 重构demo，新增google test子模块，现在使用google test与mtrace联合测试
+- 优化结构体成员排列顺序
+- 其他不影响运行的小修改
+
 ## 2022-02-28 build1006
 
 - 移动`src/port/j1939_memory.c/h`到`src/memory/j1939_memory.c/h`，移除LittleVGL的`memset` `memcpy`及其相关的宏定义，替换为rt-thread的实现

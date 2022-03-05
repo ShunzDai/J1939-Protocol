@@ -131,12 +131,12 @@ typedef struct J1939_Abort{
 } J1939_ABORT_t;
 
 struct J1939_Protocol{
-  J1939_Message_t Buffer;
-  J1939_TP_Status_t Status;
-  J1939_AbortReason_t AbortReason;
   uint8_t TotalPackets;
   uint8_t PacketsCount;
   uint8_t ResponsePackets;
+  J1939_TP_Status_t Status;
+  J1939_AbortReason_t AbortReason;
+  J1939_Message_t Buffer;
   uint64_t Tick;
 };
 

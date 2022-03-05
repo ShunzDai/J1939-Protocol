@@ -25,9 +25,9 @@ typedef J1939_Queue_t J1939_Register_t;
 
 /* J1939 handle struct */
 struct J1939{
-  J1939_Port_t *Port;
-  char *Name;
   uint8_t SelfAddress;
+  char *Name;
+  J1939_Port_t *Port;
   J1939_Queue_t TxFIFO;
   #if J1939_TRANSPORT_PROTOCOL_ENABLE
   J1939_Protocol_t Protocol;
@@ -174,7 +174,7 @@ static J1939_Status_t J1939_Deregister(J1939_t Handle){
     return J1939_ERROR;
   }
 
-  for (uint32_t i = J1939_QueueCount(Register); i >= 1; i--){
+  for (uint32_t i = J1939_QueueCount(Register); i > 0; i--){
     J1939_t Node = J1939_QueueAmong(Register, i);
     if (Node == NULL){
       J1939_LOG_ERROR("[Handle]A null pointer appears");
@@ -319,7 +319,7 @@ J1939_Status_t J1939_TaskHandler(void){
   if (Register == NULL)
     return J1939_OK;
 
-  for (uint32_t i = J1939_QueueCount(Register); i >= 1; i--){
+  for (uint32_t i = J1939_QueueCount(Register); i > 0; i--){
     J1939_t Handle = J1939_QueueAmong(Register, i);
     J1939_Receive(Handle);
     #if J1939_TRANSPORT_PROTOCOL_ENABLE
