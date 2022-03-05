@@ -22,7 +22,7 @@ extern "C"{
 #define J1939_PORT_SUSPEND                  0
 #define J1939_PORT_VIRTUAL                  1
 #define J1939_PORT_STM32                    2
-#define J1939_PORT_TYPE                     J1939_PORT_SUSPEND
+#define J1939_PORT_TYPE                     J1939_PORT_VIRTUAL
 #define __J1939_Port(val)                   (J1939_PORT_TYPE == J1939_PORT_##val)
 
 #define J1939_LOG_ENABLE                    1

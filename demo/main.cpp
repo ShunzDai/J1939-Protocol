@@ -14,9 +14,15 @@
   * limitations under the License.
   */
 #include "j1939.h"
+#include "j1939_config.h"
 #include "gtest/gtest.h"
 #include <mcheck.h>
 
+#if !__J1939_Port(VIRTUAL)
+#error "Must select virtual port"
+#endif /* __J1939_Port() */
+
+/* 验证PDU结构体功能 */
 TEST(Message, Test01){
   uint32_t ID = 0x18F00400;
   EXPECT_EQ(((J1939_PDU_t *)&ID)->SourceAddress, 0x00U);
@@ -31,6 +37,7 @@ TEST(Message, Test01){
   EXPECT_EQ(J1939_GetPGN(ID), 0xE000U);
 }
 
+/* 测试J1939消息创建/释放功能 */
 TEST(Message, Test02){
   J1939_Message_t Msg = J1939_MessageCreate(0x18F00400U, 8, "\x01\x02\x03\x04\x05\x06\x07\x08");
   EXPECT_EQ(Msg->ID, 0x18F00400U);
@@ -40,13 +47,15 @@ TEST(Message, Test02){
   EXPECT_EQ((uint64_t)Msg, (uint64_t)NULL);
 }
 
+/* 测试J1939控制句柄创建/释放功能 */
 TEST(Handle, Test01){
   J1939_t Handle = J1939_HandleCreate((char *)"hcan1", 0x00, 4);
   J1939_HandleDelete(&Handle);
   EXPECT_EQ((uint64_t)Handle, (uint64_t)NULL);
 }
 
-TEST(Handle, Test02){
+/* 测试短报文发送/接收功能 */
+TEST(Protocol, Test02){
   J1939_t Handle1 = J1939_HandleCreate((char *)"hcan1", 0x00, 4);
   J1939_t Handle2 = J1939_HandleCreate((char *)"hcan2", 0x01, 4);
   J1939_Message_t Msg = J1939_MessageCreate(0x18F00400U, 8, "\x01\x02\x03\x04\x05\x06\x07\x08");
@@ -63,7 +72,8 @@ TEST(Handle, Test02){
   EXPECT_EQ((uint64_t)Handle2, (uint64_t)NULL);
 }
 
-TEST(Handle, Test03){
+/* 测试TP BAM发送/接收功能 */
+TEST(Protocol, TP_BAM01){
   J1939_t Handle1 = J1939_HandleCreate((char *)"hcan1", 0x00, 4);
   J1939_t Handle2 = J1939_HandleCreate((char *)"hcan2", 0x01, 4);
   J1939_Send(Handle1, 0x18F00400U, 16, "\x01\x02\x03\x04\x05\x06\x07\x08\x01\x02\x03\x04\x05\x06\x07\x08");
@@ -72,10 +82,46 @@ TEST(Handle, Test03){
   J1939_Send(Handle2, 0x18F00400U, 16, "\x01\x02\x03\x04\x05\x06\x07\x08\x01\x02\x03\x04\x05\x06\x07\x08");
   while (J1939_GetProtocolStatus(Handle1) != J1939_OK || J1939_GetProtocolStatus(Handle2) != J1939_OK)
     J1939_TaskHandler();
+  J1939_HandleDelete(&Handle1);
+  J1939_HandleDelete(&Handle2);
+  EXPECT_EQ((uint64_t)Handle1, (uint64_t)NULL);
+  EXPECT_EQ((uint64_t)Handle2, (uint64_t)NULL);
+}
+
+/* 测试TP BAM发送/接收1785字节用时 */
+TEST(Protocol, TP_BAM02){
+  J1939_t Handle1 = J1939_HandleCreate((char *)"hcan1", 0x00, 4);
+  J1939_t Handle2 = J1939_HandleCreate((char *)"hcan2", 0x01, 4);
+  J1939_Send(Handle1, 0x18F00400U, 1785, NULL);
+  while (J1939_GetProtocolStatus(Handle1) != J1939_OK || J1939_GetProtocolStatus(Handle2) != J1939_OK)
+    J1939_TaskHandler();
+  J1939_HandleDelete(&Handle1);
+  J1939_HandleDelete(&Handle2);
+  EXPECT_EQ((uint64_t)Handle1, (uint64_t)NULL);
+  EXPECT_EQ((uint64_t)Handle2, (uint64_t)NULL);
+}
+
+/* 测试TP CMDT发送/接收功能 */
+TEST(Protocol, TP_CMDT01){
+  J1939_t Handle1 = J1939_HandleCreate((char *)"hcan1", 0x00, 4);
+  J1939_t Handle2 = J1939_HandleCreate((char *)"hcan2", 0x01, 4);
   J1939_Send(Handle1, 0x18E00100U, 16, "\x01\x02\x03\x04\x05\x06\x07\x08\x01\x02\x03\x04\x05\x06\x07\x08");
   while (J1939_GetProtocolStatus(Handle1) != J1939_OK || J1939_GetProtocolStatus(Handle2) != J1939_OK)
     J1939_TaskHandler();
   J1939_Send(Handle2, 0x18E00000U, 16, "\x01\x02\x03\x04\x05\x06\x07\x08\x01\x02\x03\x04\x05\x06\x07\x08");
+  while (J1939_GetProtocolStatus(Handle1) != J1939_OK || J1939_GetProtocolStatus(Handle2) != J1939_OK)
+    J1939_TaskHandler();
+  J1939_HandleDelete(&Handle1);
+  J1939_HandleDelete(&Handle2);
+  EXPECT_EQ((uint64_t)Handle1, (uint64_t)NULL);
+  EXPECT_EQ((uint64_t)Handle2, (uint64_t)NULL);
+}
+
+/* 测试TP CMDT发送/接收1785字节用时 */
+TEST(Protocol, TP_CMDT02){
+  J1939_t Handle1 = J1939_HandleCreate((char *)"hcan1", 0x00, 4);
+  J1939_t Handle2 = J1939_HandleCreate((char *)"hcan2", 0x01, 4);
+  J1939_Send(Handle1, 0x18E00100U, 1785, NULL);
   while (J1939_GetProtocolStatus(Handle1) != J1939_OK || J1939_GetProtocolStatus(Handle2) != J1939_OK)
     J1939_TaskHandler();
   J1939_HandleDelete(&Handle1);
