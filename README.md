@@ -120,6 +120,8 @@
 
 ## Demo
 
+build1007之前提供了如下demo
+
 <center>
 
 | Demo | 描述 |
@@ -129,6 +131,8 @@
 | [demo/j1939_demo_protocol.c](demo/j1939_demo_protocol.c) | 多帧传输协议 |
 
 </center>
+
+从build1007开始，demo提供的是基于google test与mtrace的联合测试用例，具体情况见`demo`文件夹下的代码
 
 ## 参考文献
 

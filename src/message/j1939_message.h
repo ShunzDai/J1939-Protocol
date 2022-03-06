@@ -43,7 +43,7 @@ typedef struct J1939_Message{
     J1939_PDU_t PDU;
     uint32_t ID;
   };
-  uint8_t *Payload;
+  uint8_t Payload[];
 } * J1939_Message_t;
 
 uint32_t J1939_GetPGN(uint32_t PDU);

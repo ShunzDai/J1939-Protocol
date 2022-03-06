@@ -56,13 +56,16 @@ J1939_Status_t J1939_SetPGN(uint32_t *PDU, const uint32_t PGN){
   * @retval J1939 message
   */
 J1939_Message_t J1939_MessageCreate(const uint32_t ID, const uint16_t Length, const void *Payload){
-  J1939_Message_t Msg = (J1939_Message_t)J1939_malloc(sizeof(struct J1939_Message));
+  J1939_Message_t Msg = (J1939_Message_t)J1939_malloc(sizeof(struct J1939_Message) + Length);
 
   Msg->ID = ID;
   Msg->Length = Length;
-  Msg->Payload = J1939_malloc(Length);
-
-  if(Payload == NULL)
+  if (Msg->Payload == NULL){
+    J1939_free(Msg);
+    Msg = NULL;
+    return NULL;
+  }
+  else if(Payload == NULL)
     J1939_memset(Msg->Payload, 0, Length);
   else
     J1939_memcpy(Msg->Payload, (uint8_t *)Payload, Length);
@@ -84,17 +87,8 @@ J1939_Status_t J1939_MessageDelete(J1939_Message_t *MsgPtr){
     return J1939_OK;
   }
   else{
-    (*MsgPtr)->ID = 0;
-    (*MsgPtr)->Length = 0;
-    if ((*MsgPtr)->Payload != NULL){
-      J1939_free((*MsgPtr)->Payload);
-      (*MsgPtr)->Payload = NULL;
-    }
-
     J1939_free(*MsgPtr);
-
     *MsgPtr = NULL;
-
     return J1939_OK;
   }
 }

@@ -16,6 +16,7 @@
 #include "j1939.h"
 #include "j1939_config.h"
 #include "gtest/gtest.h"
+#include <stdlib.h>
 #include <mcheck.h>
 
 #if !__J1939_Port(VIRTUAL)
