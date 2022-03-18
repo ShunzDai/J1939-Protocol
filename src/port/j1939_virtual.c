@@ -22,6 +22,7 @@ typedef J1939_Queue_t J1939_VirtualBus_t;
 
 /* Virtual node struct */
 struct J1939_VirtualNode{
+  J1939_Node_t Next;
   J1939_Queue_t RxFIFO;
 };
 
@@ -43,9 +44,9 @@ static J1939_Status_t J1939_Online(J1939_VirtualNode_t Virtual){
     return J1939_ERROR;
   }
   else if (VirtualBus == NULL)
-    VirtualBus = J1939_QueueCreate("vbus", J1939_SIZE_VIRTUAL_PORT, NULL, NULL);
+    VirtualBus = J1939_QueueCreate();
 
-  return J1939_Enqueue(VirtualBus, Virtual);
+  return J1939_Enqueue(VirtualBus, -1, (J1939_Node_t)Virtual);
 }
 
 /**
@@ -54,22 +55,17 @@ static J1939_Status_t J1939_Online(J1939_VirtualNode_t Virtual){
   * @retval J1939 status
   */
 static J1939_Status_t J1939_Offine(J1939_VirtualNode_t Virtual){
-  for (uint32_t i = J1939_QueueCount(VirtualBus); i > 0; i--){
-    J1939_VirtualNode_t Node = J1939_QueueAmong(VirtualBus, i);
-    if (Node == NULL){
-      J1939_LOG_ERROR("[Virtual]A null pointer appears");
+  uint32_t Count = J1939_QueueCount(VirtualBus);
+  J1939_VirtualNode_t *Node = (J1939_VirtualNode_t *)J1939_QueuePointer(VirtualBus, 0);
+  for (uint32_t i = 0; i < Count; i++){
+    if (Node == NULL)
       return J1939_ERROR;
-    }
-    else if (Node == Virtual){
+    else if (*Node == Virtual)
       J1939_Dequeue(VirtualBus, i);
-      if (J1939_QueueCount(VirtualBus) == 0)
-        J1939_QueueDelete(&VirtualBus);
-      return J1939_OK;
-    }
+    else
+      Node = (J1939_VirtualNode_t *)J1939_NodeGetNext(*Node);
   }
-
-  J1939_LOG_ERROR("[Virtual]This vnode has not been online");
-  return J1939_ERROR;
+  return (J1939_QueueCount(VirtualBus)) ? J1939_OK : J1939_QueueDelete(&VirtualBus);
 }
 
 /**
@@ -84,7 +80,7 @@ J1939_VirtualNode_t J1939_VirtualNodeCreate(void){
     return NULL;
   }
 
-  Virtual->RxFIFO = J1939_QueueCreate("vnode", J1939_SIZE_VIRTUAL_FIFO, J1939_MessageCopy, J1939_MessageDelete);
+  Virtual->RxFIFO = J1939_QueueCreate();
   if (Virtual->RxFIFO == NULL){
     J1939_LOG_ERROR("[Virtual]A null pointer appears");
     J1939_free(Virtual);
@@ -113,7 +109,6 @@ J1939_Status_t J1939_VirtualNodeDelete(J1939_VirtualNode_t *Virtual){
   else{
     J1939_QueueDelete(&(*Virtual)->RxFIFO);
     J1939_Offine(*Virtual);
-    J1939_free(*Virtual);
     *Virtual = NULL;
     return J1939_OK;
   }
@@ -130,7 +125,7 @@ uint32_t J1939_VirtualGetTxMailboxesFreeLevel(J1939_VirtualNode_t Virtual){
     return 0;
   }
 
-  return J1939_QueueGetSize(Virtual->RxFIFO) - J1939_QueueCount(Virtual->RxFIFO);
+  return J1939_SIZE_VIRTUAL_FIFO - J1939_QueueCount(Virtual->RxFIFO);
 }
 
 /**
@@ -143,7 +138,6 @@ uint32_t J1939_VirtualGetRxFifoFillLevel(J1939_VirtualNode_t Virtual){
     J1939_LOG_ERROR("[Virtual]A null pointer appears");
     return 0;
   }
-
   return J1939_QueueCount(Virtual->RxFIFO);
 }
 
@@ -154,18 +148,15 @@ uint32_t J1939_VirtualGetRxFifoFillLevel(J1939_VirtualNode_t Virtual){
   * @retval J1939 status
   */
 J1939_Status_t J1939_VirtualAddTxMessage(J1939_VirtualNode_t Virtual, J1939_Message_t Msg){
-  if (Virtual == NULL || Msg == NULL){
-    J1939_LOG_ERROR("[Virtual]A null pointer appears");
-    return J1939_ERROR;
+  uint32_t Count = J1939_QueueCount(VirtualBus);
+  J1939_VirtualNode_t *Node = (J1939_VirtualNode_t *)J1939_QueuePointer(VirtualBus, 0);
+  for (uint32_t i = 0; i < Count; i++){
+    if (Node == NULL)
+      return J1939_ERROR;
+    else if (*Node != Virtual)
+      J1939_Enqueue((*Node)->RxFIFO, -1, (J1939_Node_t)J1939_MessageCopy(Msg));
+    Node = (J1939_VirtualNode_t *)J1939_NodeGetNext(*Node);
   }
-
-  for (uint32_t i = J1939_QueueCount(VirtualBus); i > 0; i--){
-    J1939_VirtualNode_t Node = J1939_QueueAmong(VirtualBus, i);
-    if (Node != NULL && Node != Virtual){
-      J1939_Enqueue(Node->RxFIFO, Msg);
-    }
-  }
-
   return J1939_OK;
 }
 
@@ -182,8 +173,8 @@ J1939_Status_t J1939_VirtualGetRxMessage(J1939_VirtualNode_t Virtual, J1939_Mess
   }
 
   if (J1939_QueueCount(Virtual->RxFIFO)){
-    *MsgPtr = J1939_MessageCopy(J1939_QueueHead(Virtual->RxFIFO));
-    J1939_Dequeue(Virtual->RxFIFO, 1);
+    *MsgPtr = *(J1939_Message_t *)J1939_QueuePointer(Virtual->RxFIFO, 0);
+    ((J1939_Node_t)Virtual->RxFIFO)->Next = ((J1939_Node_t)Virtual->RxFIFO)->Next->Next;
   }
 
   return J1939_OK;

@@ -21,22 +21,16 @@ extern "C"{
 
 #include "src/common/j1939_typedef.h"
 
-struct J1939_Queue;
+#define J1939_NodeGetNext(Node) (&((J1939_Node_t)(Node))->Next)
 
-typedef struct J1939_Queue * J1939_Queue_t;
-
-J1939_Queue_t J1939_QueueCreate(char *Name, uint32_t QueueSize, void *CreateMethod, void *DeleteMethod);
+J1939_Queue_t J1939_QueueCreate(void);
 J1939_Status_t J1939_QueueDelete(J1939_Queue_t *Queue);
-void *J1939_QueueAmong(J1939_Queue_t Queue, const uint32_t Serial);
-//void *J1939_QueueHead(J1939_Queue_t Queue);
-//void *J1939_QueueTail(J1939_Queue_t Queue);
-#define J1939_QueueHead(Queue) J1939_QueueAmong(Queue, 1)
-#define J1939_QueueTail(Queue) J1939_QueueAmong(Queue, Queue->Count)
-J1939_Status_t J1939_Enqueue(J1939_Queue_t Queue, void *Obj);
-J1939_Status_t J1939_Dequeue(J1939_Queue_t Queue, const uint32_t Serial);
-J1939_Status_t J1939_QueueClear(J1939_Queue_t Queue);
+J1939_Node_t *J1939_QueuePointer(J1939_Queue_t Queue, int32_t Pos);
 uint32_t J1939_QueueCount(J1939_Queue_t Queue);
-uint32_t J1939_QueueGetSize(J1939_Queue_t Queue);
+int J1939_QueueEmpty(J1939_Queue_t Queue);
+int J1939_QueueClear(J1939_Queue_t Queue);
+int J1939_Enqueue(J1939_Queue_t Queue, int32_t Pos, J1939_Node_t Node);
+int J1939_Dequeue(J1939_Queue_t Queue, int32_t Pos);
 
 #ifdef __cplusplus
 }

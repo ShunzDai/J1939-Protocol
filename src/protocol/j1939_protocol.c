@@ -485,7 +485,7 @@ J1939_Status_t J1939_ProtocolTransmitManager(J1939_Protocol_t Protocol, J1939_Me
   else if (Msg->Length > J1939_TP_BUFFER_SIZE)
     return J1939_ERROR;
 
-  Protocol->Buffer = J1939_MessageCopy(Msg);
+  Protocol->Buffer = Msg;
   Protocol->TotalPackets = __GetTotalPackets(Msg->Length);
 
   if (Msg->PDU.PDUFormat >= J1939_ADDRESS_DIVIDE)

@@ -38,6 +38,7 @@ typedef struct J1939_PDU{
 
 /* Message struct */
 typedef struct J1939_Message{
+  J1939_Node_t Next;
   uint16_t Length;
   union{
     J1939_PDU_t PDU;

@@ -32,6 +32,8 @@ extern "C"{
 #define J1939_WEAK
 #endif
 
+#define J1939_Assert(Expression, Reason)
+
 /* J1939 common status */
 typedef enum{
   J1939_OK                                  = 0x00U,
@@ -41,6 +43,19 @@ typedef enum{
   J1939_TRANSMIT                            = 0x04U,
   J1939_RECEIVED                            = 0x05U,
 }J1939_Status_t;
+
+struct J1939_Node;
+
+typedef struct J1939_Node * J1939_Node_t;
+
+struct J1939_Queue;
+
+typedef struct J1939_Queue * J1939_Queue_t;
+
+/* Node struct */
+struct J1939_Node{
+  J1939_Node_t Next;
+};
 
 #ifdef __cplusplus
 }

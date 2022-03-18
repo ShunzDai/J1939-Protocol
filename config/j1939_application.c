@@ -14,6 +14,7 @@
   * limitations under the License.
   */
 #include "j1939.h"
+#include "src/message/j1939_message.h"
 #include "j1939_config.h"
 
 J1939_WEAK J1939_Status_t J1939_AppSoftwareFilter(J1939_t Handle, J1939_Message_t Msg){
