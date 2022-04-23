@@ -35,10 +35,7 @@ uint32_t J1939_GetPGN(uint32_t PDU){
   * @retval J1939 status
   */
 J1939_Status_t J1939_SetPGN(uint32_t *PDU, const uint32_t PGN){
-  if (PDU == NULL){
-    J1939_LOG_ERROR("[PDU]A null pointer appears");
-    return J1939_ERROR;
-  }
+  J1939_Assert(PDU != NULL);
   /* Reference SAE J1939-21 5.1.2 */
   ((J1939_PDU_t *)PDU)->Reserved = (PGN >> 17) & 0x01;
   ((J1939_PDU_t *)PDU)->DataPage = (PGN >> 16) & 0x01;
@@ -70,18 +67,13 @@ J1939_Message_t J1939_MessageCreate(const uint32_t ID, const uint16_t Length, co
   * @retval J1939 status
   */
 J1939_Status_t J1939_MessageDelete(J1939_Message_t *MsgPtr){
-  if (MsgPtr == NULL){
-    J1939_LOG_ERROR("[Message]A null pointer appears");
-    return J1939_ERROR;
-  }
-  else if (*MsgPtr == NULL){
+  J1939_Assert(MsgPtr != NULL);
+  if (*MsgPtr == NULL){
     return J1939_OK;
   }
-  else{
-    J1939_free(*MsgPtr);
-    *MsgPtr = NULL;
-    return J1939_OK;
-  }
+  J1939_free(*MsgPtr);
+  *MsgPtr = NULL;
+  return J1939_OK;
 }
 
 /**
@@ -90,12 +82,7 @@ J1939_Status_t J1939_MessageDelete(J1939_Message_t *MsgPtr){
   * @retval J1939 message's copy
   */
 J1939_Message_t J1939_MessageCopy(J1939_Message_t Msg){
-  if (Msg == NULL){
-    J1939_LOG_ERROR("[Message]A null pointer appears");
-    return NULL;
-  }
-
+  J1939_Assert(Msg != NULL);
   J1939_Message_t Cpy = J1939_MessageCreate(Msg->ID, Msg->Length, Msg->Payload);
-
   return Cpy;
 }

@@ -60,6 +60,9 @@ TEST(Protocol, TP_BAM02){
   J1939_SendMessage(Handle1, 0x18F00400U, 1785, NULL);
   while (J1939_GetProtocolStatus(Handle1) != J1939_OK || J1939_GetProtocolStatus(Handle2) != J1939_OK)
     J1939_TaskHandler();
+  J1939_SendMessage(Handle2, 0x18F00401U, 1785, NULL);
+  while (J1939_GetProtocolStatus(Handle1) != J1939_OK || J1939_GetProtocolStatus(Handle2) != J1939_OK)
+    J1939_TaskHandler();
   J1939_HandleDelete(&Handle1);
   J1939_HandleDelete(&Handle2);
   EXPECT_EQ((uint64_t)Handle1, (uint64_t)NULL);
@@ -73,7 +76,7 @@ TEST(Protocol, TP_CMDT01){
   J1939_SendMessage(Handle1, 0x18E00100U, 16, "\x01\x02\x03\x04\x05\x06\x07\x08\x01\x02\x03\x04\x05\x06\x07\x08");
   while (J1939_GetProtocolStatus(Handle1) != J1939_OK || J1939_GetProtocolStatus(Handle2) != J1939_OK)
     J1939_TaskHandler();
-  J1939_SendMessage(Handle2, 0x18E00000U, 16, "\x01\x02\x03\x04\x05\x06\x07\x08\x01\x02\x03\x04\x05\x06\x07\x08");
+  J1939_SendMessage(Handle2, 0x18E00001U, 16, "\x01\x02\x03\x04\x05\x06\x07\x08\x01\x02\x03\x04\x05\x06\x07\x08");
   while (J1939_GetProtocolStatus(Handle1) != J1939_OK || J1939_GetProtocolStatus(Handle2) != J1939_OK)
     J1939_TaskHandler();
   J1939_HandleDelete(&Handle1);
@@ -87,6 +90,9 @@ TEST(Protocol, TP_CMDT02){
   J1939_t Handle1 = J1939_HandleCreate((char *)"hcan1", 0x00, 4);
   J1939_t Handle2 = J1939_HandleCreate((char *)"hcan2", 0x01, 4);
   J1939_SendMessage(Handle1, 0x18E00100U, 1785, NULL);
+  while (J1939_GetProtocolStatus(Handle1) != J1939_OK || J1939_GetProtocolStatus(Handle2) != J1939_OK)
+    J1939_TaskHandler();
+  J1939_SendMessage(Handle2, 0x18E00001U, 1785, NULL);
   while (J1939_GetProtocolStatus(Handle1) != J1939_OK || J1939_GetProtocolStatus(Handle2) != J1939_OK)
     J1939_TaskHandler();
   J1939_HandleDelete(&Handle1);

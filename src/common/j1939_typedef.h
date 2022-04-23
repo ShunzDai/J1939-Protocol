@@ -32,8 +32,6 @@ extern "C"{
 #define J1939_WEAK
 #endif
 
-#define J1939_Assert(Expression, Reason)
-
 /* J1939 common status */
 typedef enum{
   J1939_OK                                  = 0x00U,

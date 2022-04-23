@@ -176,3 +176,8 @@ J1939_Status_t J1939_PortGetRxMessage(J1939_Port_t *Port, J1939_Message_t *MsgPt
   #error "Incompatible port"
   #endif /* __J1939_Port() */
 }
+
+void J1939_PortAssertError(const char *File, const char *Func, int Line, char *Condition){
+  printf("Assertion failed: %s\nfile %s, func %s, line %d\n", Condition, File, Func, Line);
+  while (1);
+}

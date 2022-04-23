@@ -20,7 +20,7 @@
 #include <mcheck.h>
 
 #if !__J1939_Port(VIRTUAL)
-//#error "Must select virtual port"
+#error "Must select virtual port"
 #endif /* __J1939_Port() */
 
 int main(int argc, char** argv){

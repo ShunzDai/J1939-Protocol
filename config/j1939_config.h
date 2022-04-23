@@ -22,12 +22,11 @@ extern "C"{
 #define J1939_PORT_SUSPEND                  0
 #define J1939_PORT_VIRTUAL                  1
 #define J1939_PORT_STM32                    2
-#define J1939_PORT_TYPE                     J1939_PORT_VIRTUAL
+#define J1939_PORT_TYPE                     J1939_PORT_SUSPEND
 #define __J1939_Port(val)                   (J1939_PORT_TYPE == J1939_PORT_##val)
 
 #define J1939_LOG_ENABLE                    1
 
-#define J1939_SIZE_MEMORY_POOL              0xFFFFFFFF
 /* CAN buffer size */
 #define J1939_SIZE_CAN_BUFFER               8
 /* CAN port size */
@@ -50,6 +49,9 @@ extern "C"{
 #define J1939_LOG_WARN(format, ...)
 #define J1939_LOG_ERROR(format, ...)
 #endif /* J1939_LOG_ENABLE */
+
+void J1939_PortAssertError(const char *File, const char *Func, int Line, char *Condition);
+#define J1939_Assert(Condition, ...) ((Condition) ? ((void)0U) : J1939_PortAssertError(__FILE__, __FUNCTION__, __LINE__, #Condition ", " #__VA_ARGS__))
 
 #define J1939_ADDRESS_DIVIDE                0xF0/* DO NOT MODIFIED THIS PRAMETER */
 #define J1939_ADDRESS_NULL                  0xFE/* DO NOT MODIFIED THIS PRAMETER */

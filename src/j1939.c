@@ -68,12 +68,7 @@ static J1939_Status_t J1939_Transmit(J1939_t Handle){
   while(FreeLevel--){
     J1939_Message_t Msg = (J1939_Message_t)*J1939_QueuePointer(Handle->TxFIFO, 0);
 
-    if (Msg == NULL){
-      J1939_LOG_ERROR("[Send]A null pointer appears");
-    }
-    else if (Msg->Payload == NULL){
-      J1939_LOG_ERROR("[Send]A null pointer appears");
-    }
+    J1939_Assert(Msg != NULL);
 
     if (J1939_PortAddTxMessage(Handle->Port, Msg) == J1939_OK)
       J1939_AppSendingCallBack(Handle, Msg);
@@ -155,11 +150,9 @@ static J1939_Status_t J1939_ReceiveSplit(J1939_t Handle, J1939_Message_t Msg){
   * @retval J1939 status
   */
 static J1939_Status_t J1939_Enregister(J1939_t Handle){
-  if (Handle == NULL){
-    J1939_LOG_ERROR("[Handle]A null pointer appears");
-    return J1939_ERROR;
-  }
-  else if (Register == NULL)
+  J1939_Assert(Handle != NULL);
+
+  if (Register == NULL)
     Register = J1939_QueueCreate();
 
   return J1939_Enqueue(Register, -1, (J1939_Node_t)Handle);
@@ -171,7 +164,8 @@ static J1939_Status_t J1939_Enregister(J1939_t Handle){
   * @retval J1939 status
   */
 static J1939_Status_t J1939_Deregister(J1939_t Handle){
-  J1939_Assert(Handle != NULL, "");
+  J1939_Assert(Handle != NULL);
+
   uint32_t Count = J1939_QueueCount(Register);
   J1939_t *Node = (J1939_t *)J1939_QueuePointer(Register, 0);
   for (uint32_t i = 0; i < Count; i++){
@@ -236,61 +230,39 @@ J1939_t J1939_HandleCreate(char *Name, uint8_t SelfAddress, uint32_t QueueSize){
   * @retval J1939 status
   */
 J1939_Status_t J1939_HandleDelete(J1939_t *Handle){
-  if (Handle == NULL){
-    J1939_LOG_ERROR("[Handle]A null pointer appears");
-    return J1939_ERROR;
-  }
-  else if (*Handle == NULL){
+  J1939_Assert(Handle != NULL);
+  if (*Handle == NULL){
     return J1939_OK;
   }
-  else{
-    J1939_LOG_INFO("[Handle]'%s' has been deleted", (*Handle)->Name);
-    #if J1939_TRANSPORT_PROTOCOL_ENABLE
-    J1939_ProtocolDelete(&(*Handle)->Protocol);
-    #endif /* J1939_TRANSPORT_PROTOCOL_ENABLE */
-    J1939_QueueDelete(&(*Handle)->TxFIFO);
-    J1939_PortDeInit((*Handle)->Port);
-    J1939_Deregister(*Handle);
-    *Handle = NULL;
-    return J1939_OK;
-  }
+  J1939_LOG_INFO("[Handle]'%s' has been deleted", (*Handle)->Name);
+  #if J1939_TRANSPORT_PROTOCOL_ENABLE
+  J1939_ProtocolDelete(&(*Handle)->Protocol);
+  #endif /* J1939_TRANSPORT_PROTOCOL_ENABLE */
+  J1939_QueueDelete(&(*Handle)->TxFIFO);
+  J1939_PortDeInit((*Handle)->Port);
+  J1939_Deregister(*Handle);
+  *Handle = NULL;
+  return J1939_OK;
 }
 
 char *J1939_GetPortName(J1939_t Handle){
-  if (Handle == NULL){
-    J1939_LOG_ERROR("[Handle]A null pointer appears");
-    return 0;
-  }
-
+  J1939_Assert(Handle != NULL);
   return Handle->Name;
 }
 
 uint8_t J1939_GetSelfAddress(J1939_t Handle){
-  if (Handle == NULL){
-    J1939_LOG_ERROR("[Handle]A null pointer appears");
-    return 0;
-  }
-
+  J1939_Assert(Handle != NULL);
   return Handle->SelfAddress;
 }
 
 J1939_Status_t J1939_SetSelfAddress(J1939_t Handle, uint8_t SelfAddress){
-  if (Handle == NULL){
-    J1939_LOG_ERROR("[Handle]A null pointer appears");
-    return J1939_ERROR;
-  }
-
+  J1939_Assert(Handle != NULL);
   Handle->SelfAddress = SelfAddress;
-
   return J1939_OK;
 }
 
 J1939_Status_t J1939_GetProtocolStatus(J1939_t Handle){
-  if (Handle == NULL){
-    J1939_LOG_ERROR("[Handle]A null pointer appears");
-    return J1939_ERROR;
-  }
-
+  J1939_Assert(Handle != NULL);
   #if J1939_TRANSPORT_PROTOCOL_ENABLE
   return J1939_ProtocolStatus(Handle->Protocol);
   #else /* J1939_TRANSPORT_PROTOCOL_ENABLE */
@@ -346,10 +318,7 @@ J1939_Status_t J1939_TaskHandler(void){
   * @retval J1939 status
   */
 J1939_Status_t J1939_SendMessage(J1939_t Handle, const uint32_t ID, const uint16_t Length, const void *Payload){
-  if (Handle == NULL){
-    J1939_LOG_ERROR("[Handle]A null pointer appears");
-    return J1939_ERROR;
-  }
+  J1939_Assert(Handle != NULL);
   J1939_Message_t Msg = J1939_MessageCreate(ID, Length, Payload);
   if (Msg->PDU.SourceAddress != Handle->SelfAddress)
     Msg->PDU.SourceAddress = Handle->SelfAddress;

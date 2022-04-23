@@ -20,9 +20,11 @@
 
 #if J1939_TRANSPORT_PROTOCOL_ENABLE
 
-#define __GetTotalPackets(Length)           (((Length) % 7 == 0) ? ((Length)/7) : (((Length) - (Length) % 7)/7 + 1))
-#define __GetLastSection(Length)            (((Length) % 7 == 0) ? (7) : ((Length) % 7))
-#define __GetByteOffset(PacketsCount)       (7*((PacketsCount) - 1))
+#define J1939_SIZE_PROTOCOL_PAYLOAD         (J1939_SIZE_CAN_BUFFER - 1)
+
+#define _GetTotalPackets(Length)            (((Length) - 1) / J1939_SIZE_PROTOCOL_PAYLOAD + 1)
+#define _GetLastSection(Length)             (((Length) % J1939_SIZE_PROTOCOL_PAYLOAD) ? ((Length) % J1939_SIZE_PROTOCOL_PAYLOAD) : (J1939_SIZE_PROTOCOL_PAYLOAD))
+#define _GetByteOffset(PacketsCount)        (((PacketsCount) - 1) * J1939_SIZE_PROTOCOL_PAYLOAD)
 
 /* Transport Protocol internal status */
 typedef enum J1939_TP_Status{
@@ -134,7 +136,7 @@ struct J1939_Protocol{
   uint8_t TotalPackets;
   uint8_t PacketsCount;
   uint8_t ResponsePackets;
-  J1939_TP_Status_t Status;
+  uint8_t Status;
   J1939_AbortReason_t AbortReason;
   J1939_Message_t Buffer;
   uint64_t Tick;
@@ -150,7 +152,7 @@ static J1939_Status_t J1939_TP_DT_TransmitManager(J1939_Protocol_t Protocol, J19
   if (Protocol->Status != J1939_TP_DT_BAM_TX && Protocol->Status != J1939_TP_DT_CMDT_TX)
     return J1939_ERROR;
 
-  uint8_t Section = J1939_SIZE_CAN_BUFFER - 1;
+  uint8_t Section = J1939_SIZE_PROTOCOL_PAYLOAD;
 
   *MsgPtr = J1939_MessageCreate(0, J1939_SIZE_CAN_BUFFER, NULL);
   (*MsgPtr)->PDU.SourceAddress = Protocol->Buffer->PDU.SourceAddress;
@@ -159,8 +161,8 @@ static J1939_Status_t J1939_TP_DT_TransmitManager(J1939_Protocol_t Protocol, J19
   J1939_SetPGN(&(*MsgPtr)->ID, J1939_PGN_TP_DT);
 
   if (++Protocol->PacketsCount == Protocol->TotalPackets){
-    Section = __GetLastSection(Protocol->Buffer->Length);
-    J1939_memset((*MsgPtr)->Payload + Section + 1, 0xFF, J1939_SIZE_CAN_BUFFER - 1 - Section);
+    Section = _GetLastSection(Protocol->Buffer->Length);
+    J1939_memset((*MsgPtr)->Payload + Section + 1, 0xFF, J1939_SIZE_PROTOCOL_PAYLOAD - Section);
     switch (Protocol->Status){
       case J1939_TP_DT_BAM_TX:
         Protocol->Status = J1939_TP_COMPLETE_TX;
@@ -169,6 +171,7 @@ static J1939_Status_t J1939_TP_DT_TransmitManager(J1939_Protocol_t Protocol, J19
         Protocol->Status = J1939_TP_CM_ACK_RX;
         break;
       default:
+        J1939_Assert(0);
         break;
     }
   }
@@ -179,7 +182,7 @@ static J1939_Status_t J1939_TP_DT_TransmitManager(J1939_Protocol_t Protocol, J19
 
   (*MsgPtr)->Payload[0] = Protocol->PacketsCount;
 
-  J1939_memcpy((*MsgPtr)->Payload + 1, Protocol->Buffer->Payload + __GetByteOffset(Protocol->PacketsCount), Section);
+  J1939_memcpy((*MsgPtr)->Payload + 1, Protocol->Buffer->Payload + _GetByteOffset(Protocol->PacketsCount), Section);
 
   Protocol->Tick = J1939_PortGetTick();
 
@@ -194,10 +197,10 @@ static J1939_Status_t J1939_TP_DT_ReceiveManager(J1939_Protocol_t Protocol, J193
     return J1939_ERROR;
   }
 
-  uint8_t Section = J1939_SIZE_CAN_BUFFER - 1;
+  uint8_t Section = J1939_SIZE_PROTOCOL_PAYLOAD;
 
   if (++Protocol->PacketsCount == Protocol->TotalPackets){
-    Section = __GetLastSection(Protocol->Buffer->Length);
+    Section = _GetLastSection(Protocol->Buffer->Length);
     switch (Protocol->Status){
       case J1939_TP_DT_BAM_RX:
         Protocol->Status = J1939_TP_COMPLETE_RX;
@@ -214,7 +217,7 @@ static J1939_Status_t J1939_TP_DT_ReceiveManager(J1939_Protocol_t Protocol, J193
       Protocol->Status = J1939_TP_CM_CTS_TX;
   }
 
-  J1939_memcpy(Protocol->Buffer->Payload + __GetByteOffset(Protocol->PacketsCount), Msg->Payload + 1, Section);
+  J1939_memcpy(Protocol->Buffer->Payload + _GetByteOffset(Protocol->PacketsCount), Msg->Payload + 1, Section);
 
   Protocol->Tick = J1939_PortGetTick();
 
@@ -486,7 +489,7 @@ J1939_Status_t J1939_ProtocolTransmitManager(J1939_Protocol_t Protocol, J1939_Me
     return J1939_ERROR;
 
   Protocol->Buffer = Msg;
-  Protocol->TotalPackets = __GetTotalPackets(Msg->Length);
+  Protocol->TotalPackets = _GetTotalPackets(Msg->Length);
 
   if (Msg->PDU.PDUFormat >= J1939_ADDRESS_DIVIDE)
     Protocol->Status = J1939_TP_CM_BAM_TX;
