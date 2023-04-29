@@ -63,7 +63,7 @@
 
 2. 复制`config`文件夹到本项目外，并将复制后的`config`文件夹加入到工程的include列表.
 
-3. 将工程中所有CAN控制句柄填入[config/j1939_register.inc](config/j1939_register.inc).
+3. 将工程中所有CAN控制句柄填入[config/j1939_port.inc](config/j1939_port.inc).
 
 4. 编写应用层代码. [config/j1939_application.c](config/j1939_application.c)提供了应用层函数接口的模板，定义如下. 此外，模板提供的所有函数接口都带有weak修饰符，这意味着允许用户在其他位置自行定义函数接口.
 
