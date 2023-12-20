@@ -19,83 +19,56 @@
 extern "C"{
 #endif /* __cplusplus */
 
-#define J1939_PORT_SUSPEND                  0
-#define J1939_PORT_VIRTUAL                  1
-#define J1939_PORT_STM32                    2
-#define J1939_PORT_TYPE                     J1939_PORT_SUSPEND
-#define __J1939_Port(val)                   (J1939_PORT_TYPE == J1939_PORT_##val)
+#include <stdint.h>
 
-#define J1939_LOG_ENABLE                    1
+#if defined J1939_MOCK
+#define J1939_PORT_VIRTUAL
+#elif defined ESP_PLATFORM
+#define J1939_PORT_ESP32
+#endif
 
-/* CAN buffer size */
-#define J1939_SIZE_CAN_BUFFER               8
-/* CAN port size */
-#define J1939_SIZE_CAN_PORT                 8
+#define J1939_SIZE_DATAFIELD            8
 
-#if __J1939_Port(VIRTUAL)
-#define J1939_SIZE_VIRTUAL_PORT             J1939_SIZE_CAN_PORT
-#define J1939_SIZE_VIRTUAL_FIFO             3
-#endif /* __J1939_Port() */
+typedef enum j1939_status {
+  J1939_ERROR = -10,
+  J1939_TIMEOUT,
+  J1939_OK = 0,
+  J1939_BUSY,
+  J1939_BLOCKED,
+} j1939_status_t;
 
-#if J1939_LOG_ENABLE
-#include <stdio.h>
-#define J1939_LOG(format, ...)              printf(format, ##__VA_ARGS__)
-#define J1939_LOG_INFO(format, ...)         J1939_LOG("[J1939][Info]" format "\r\n", ##__VA_ARGS__)
-#define J1939_LOG_WARN(format, ...)         J1939_LOG("[J1939][Warn]" "func %s, file %s, line %d: " format "\r\n", __FUNCTION__, __FILE__, __LINE__, ##__VA_ARGS__)
-#define J1939_LOG_ERROR(format, ...)        J1939_LOG("[J1939][Error]" "func %s, file %s, line %d: " format "\r\n", __FUNCTION__, __FILE__, __LINE__, ##__VA_ARGS__)
-#else /* J1939_LOG_ENABLE */
-#define J1939_LOG(format, ...)
-#define J1939_LOG_INFO(format, ...)
-#define J1939_LOG_WARN(format, ...)
-#define J1939_LOG_ERROR(format, ...)
-#endif /* J1939_LOG_ENABLE */
+/* j1939 protocol data unit struct */
+typedef struct j1939_pdu {
+  /* reference SAE J1939-21 5.2 */
+  uint32_t source_address : 8;
+  uint32_t pdu_specific   : 8;
+  uint32_t pdu_format     : 8;
+  uint32_t data_page      : 1;
+  uint32_t reserved       : 1;
+  uint32_t priority       : 3;
+  uint32_t err            : 1; /* error message frame */
+  uint32_t rtr            : 1; /* remote transmission request flag */
+  uint32_t eff            : 1; /* frame format flag */
+} j1939_pdu_t;
 
-void J1939_PortAssertError(const char *File, const char *Func, int Line, char *Condition);
-#define J1939_Assert(Condition, ...) ((Condition) ? ((void)0U) : J1939_PortAssertError(__FILE__, __FUNCTION__, __LINE__, #Condition ", " #__VA_ARGS__))
+/* j1939 message struct */
+typedef struct j1939_message {
+  union {
+    j1939_pdu_t pdu;
+    uint32_t id;
+  };
+  uint16_t size;
+  uint8_t data[];
+} j1939_message_t;
 
-#define J1939_ADDRESS_DIVIDE                0xF0/* DO NOT MODIFIED THIS PRAMETER */
-#define J1939_ADDRESS_NULL                  0xFE/* DO NOT MODIFIED THIS PRAMETER */
-#define J1939_ADDRESS_GLOBAL                0xFF/* DO NOT MODIFIED THIS PRAMETER */
-
-/* Config J1939 transport Protocol, enabled by default */
-#define J1939_TRANSPORT_PROTOCOL_ENABLE     1
-
-#if J1939_TRANSPORT_PROTOCOL_ENABLE
-/* Reference SAE J1939-21 5.10.1.1 */
-/* min size = 9, max size = 1785 */
-#define J1939_TP_BUFFER_SIZE                1785
-/* Config response packets number of TP CTS */
-#define J1939_TP_CM_CTS_RESPONSE            4
-
-#define J1939_TP_DEFAULT_PRIORITY           0x07
-
-#define J1939_TP_BAM_TX_INTERVAL            50
-
-/* Reference https://elearning.vector.com/mod/page/view.php?id=422 */
-/* Reference SAE J1939-81 */
-/* Used for identification of an ECU and for detection of address conflicts */
-#define J1939_PGN_ADDR_CLAIMED              0x00EE00
-/* Reference SAE J1939-21 */
-/* Other PGNs can be requested using this PGN, similarly as for the CAN Remote Frame. */
-/* But note: J1939 does not support Remote Frames. The Request PGN is a CAN data frame. */
-#define J1939_PGN_REQUEST                   0x00EA00
-/* Reference SAE J1939-21 */
-/* Transmits the payload data for the transport protocols */
-#define J1939_PGN_TP_DT                     0x00EB00
-/* Reference SAE J1939-21 */
-/* Supplies the metadata (number of bytes, packets, etc.) for transport protocols */
-#define J1939_PGN_TP_CM                     0x00EC00
-/* Reference SAE J1939-21 */
-/* Manufacturer-specific definable specific PGN */
-#define J1939_PGN_PROPRIETARY_A             0x00EF00
-/* Reference SAE J1939-21 */
-/* Manufacturer-specific definable additional specific PGN */
-#define J1939_PGN_PROPRIETARY_A1            0x01EF00
-/* Reference SAE J1939-21 */
-/* Used for acknowledgement of various network services. Can be positive or negative. */
-/* The acknowledgement is referenced accordingly in the application layer. */
-#define J1939_PGN_ACKNOWLEDGEMENT           0x00E800
-#endif /* J1939_TRANSPORT_PROTOCOL_ENABLE */
+typedef struct j1939_static_message {
+  union {
+    j1939_pdu_t pdu;
+    uint32_t id;
+  };
+  uint16_t size;
+  uint8_t data[J1939_SIZE_DATAFIELD];
+} j1939_static_message_t;
 
 #ifdef __cplusplus
 }

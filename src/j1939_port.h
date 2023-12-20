@@ -13,21 +13,25 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#ifndef J1939_SRC_MEMORY_H
-#define J1939_SRC_MEMORY_H
+#ifndef J1939_PORT_H
+#define J1939_PORT_H
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
-#include "src/common/j1939_typedef.h"
+#include "j1939_config.h"
+#if defined J1939_PORT_VIRTUAL
+#include "j1939_virtual.h"
+#elif defined J1939_PORT_ESP32
+typedef void * j1939_port_t;
+#endif /* J1939_PORT */
 
-void *J1939_malloc(size_t _Size);
-void J1939_free(void *_Block);
-void *J1939_memset(void *_Dst, uint8_t _Val, size_t _Size);
-void *J1939_memcpy(void *_Dst, const void *_Src, size_t _Size);
-int J1939_strcmp(const char *Str1,const char *Str2);
+j1939_status_t j1939_port_transmit(j1939_port_t self, const j1939_static_message_t *msg, uint32_t timeout_ms);
+j1939_status_t j1939_port_receive(j1939_port_t self, j1939_static_message_t *msg, uint32_t timeout_ms);
+uint32_t j1939_port_get_tick(void);
+void j1939_port_delay(uint32_t time_ms);
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-#endif /* J1939_SRC_MEMORY_H */
+#endif /* J1939_PORT_H */
