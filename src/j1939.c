@@ -14,6 +14,10 @@
   * limitations under the License.
   */
 #include "j1939.h"
+#include "j1939_port.h"
+#if defined J1939_PORT_VIRTUAL
+#include "j1939_virtual.h"
+#endif /* J1939_PORT_VIRTUAL */
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
@@ -552,6 +556,9 @@ j1939_t *j1939_create(j1939_config_t *config) {
   self->recv_cb = config->recv_cb;
   self->timeout_cb = config->timeout_cb;
   self->arg = config->arg;
+  #if defined J1939_PORT_VIRTUAL
+  j1939_virtual_add_node(self->port);
+  #endif /* J1939_PORT_VIRTUAL */
   return self;
 }
 

@@ -19,12 +19,7 @@
 extern "C" {
 #endif /* __cplusplus */
 
-#include "j1939_config.h"
-#if defined J1939_PORT_VIRTUAL
-#include "j1939_virtual.h"
-#elif defined J1939_PORT_ESP32
-typedef void * j1939_port_t;
-#endif /* J1939_PORT */
+#include "j1939_types.h"
 
 j1939_status_t j1939_port_transmit(j1939_port_t self, const j1939_static_message_t *msg, uint32_t timeout_ms);
 j1939_status_t j1939_port_receive(j1939_port_t self, j1939_static_message_t *msg, uint32_t timeout_ms);

@@ -1,15 +1,28 @@
 #include "j1939_virtual.h"
 #include <queue>
+#include <unordered_map>
 #include <stdio.h>
 
+struct Hash {
+    size_t operator()(const j1939_port_t& self) const {
+        return self;
+    }
+};
+
+struct Pred {
+    bool operator()(const j1939_port_t& l, const j1939_port_t& r) const {
+        return l == r;
+    }
+};
+
 using node_t = std::queue<j1939_static_message_t>;
-using bus_t = std::vector<node_t>;
+using bus_t = std::unordered_map<j1939_port_t, node_t, Hash, Pred>;
 
 static bus_t _bus{};
 
 extern "C" j1939_status_t j1939_virtual_transmit(j1939_port_t self, const j1939_static_message_t *msg, uint32_t timeout_ms) {
-  for (auto &node : _bus) {
-    if (&_bus[self] == &node)
+  for (auto &[port, node] : _bus) {
+    if (port == self)
       continue;
     node.push(*msg);
   }
@@ -21,8 +34,8 @@ extern "C" j1939_status_t j1939_virtual_transmit(j1939_port_t self, const j1939_
 }
 
 extern "C" j1939_status_t j1939_virtual_receive(j1939_port_t self, j1939_static_message_t *msg, uint32_t timeout_ms) {
-  for (auto &node : _bus) {
-    if (&_bus[self] != &node)
+  for (auto &[port, node] : _bus) {
+    if (port != self)
       continue;
     if (node.size() == 0)
       return J1939_TIMEOUT;
@@ -41,6 +54,6 @@ extern "C" uint32_t j1939_virtual_get_tick(void) {
   return count++;
 }
 
-void j1939_virtual_add_node(void) {
-  _bus.push_back(node_t{});
+void j1939_virtual_add_node(j1939_port_t self) {
+  _bus[self] = {};
 }

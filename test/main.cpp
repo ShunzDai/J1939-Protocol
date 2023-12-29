@@ -49,60 +49,57 @@ TEST(j1939, protocol) {
   };
   j1939_t *bus[] = {j1939_create(&config[0]), j1939_create(&config[1])};
 
-  for (size_t idx = 0; idx < sizeof(bus) / sizeof(j1939_t *); ++idx)
-    j1939_virtual_add_node();
-
   j1939_transmit(bus[0], j1939_message_create(0x18E00100U, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890", 62), -1);
 
-  j1939_receive(bus[0], -1);
-  j1939_tp_cm_transmit_manager(bus[0], -1);
-  j1939_receive(bus[1], -1);
-  j1939_tp_cm_transmit_manager(bus[1], -1);
+  printf(">>> %d\n", j1939_receive(bus[0], -1));
+  printf(">>> %d\n", j1939_tp_cm_transmit_manager(bus[0], -1));
+  printf(">>> %d\n", j1939_receive(bus[1], -1));
+  printf(">>> %d\n", j1939_tp_cm_transmit_manager(bus[1], -1));
 
-  j1939_receive(bus[0], -1);
-  j1939_tp_cm_transmit_manager(bus[0], -1);
-  j1939_receive(bus[1], -1);
-  j1939_tp_cm_transmit_manager(bus[1], -1);
+  printf(">>> %d\n", j1939_receive(bus[0], -1));
+  printf(">>> %d\n", j1939_tp_cm_transmit_manager(bus[0], -1));
+  printf(">>> %d\n", j1939_receive(bus[1], -1));
+  printf(">>> %d\n", j1939_tp_cm_transmit_manager(bus[1], -1));
 
-  j1939_receive(bus[0], -1);
-  j1939_tp_cm_transmit_manager(bus[0], -1);
-  j1939_receive(bus[1], -1);
-  j1939_tp_cm_transmit_manager(bus[1], -1);
+  printf(">>> %d\n", j1939_receive(bus[0], -1));
+  printf(">>> %d\n", j1939_tp_cm_transmit_manager(bus[0], -1));
+  printf(">>> %d\n", j1939_receive(bus[1], -1));
+  printf(">>> %d\n", j1939_tp_cm_transmit_manager(bus[1], -1));
 
-  j1939_receive(bus[0], -1);
-  j1939_tp_cm_transmit_manager(bus[0], -1);
-  j1939_receive(bus[1], -1);
-  j1939_tp_cm_transmit_manager(bus[1], -1);
+  printf(">>> %d\n", j1939_receive(bus[0], -1));
+  printf(">>> %d\n", j1939_tp_cm_transmit_manager(bus[0], -1));
+  printf(">>> %d\n", j1939_receive(bus[1], -1));
+  printf(">>> %d\n", j1939_tp_cm_transmit_manager(bus[1], -1));
 
-  j1939_receive(bus[0], -1);
-  j1939_tp_cm_transmit_manager(bus[0], -1);
-  j1939_receive(bus[1], -1);
-  j1939_tp_cm_transmit_manager(bus[1], -1);
+  printf(">>> %d\n", j1939_receive(bus[0], -1));
+  printf(">>> %d\n", j1939_tp_cm_transmit_manager(bus[0], -1));
+  printf(">>> %d\n", j1939_receive(bus[1], -1));
+  printf(">>> %d\n", j1939_tp_cm_transmit_manager(bus[1], -1));
 
-  j1939_receive(bus[0], -1);
-  j1939_tp_cm_transmit_manager(bus[0], -1);
-  j1939_receive(bus[1], -1);
-  j1939_tp_cm_transmit_manager(bus[1], -1);
+  printf(">>> %d\n", j1939_receive(bus[0], -1));
+  printf(">>> %d\n", j1939_tp_cm_transmit_manager(bus[0], -1));
+  printf(">>> %d\n", j1939_receive(bus[1], -1));
+  printf(">>> %d\n", j1939_tp_cm_transmit_manager(bus[1], -1));
 
-  j1939_receive(bus[0], -1);
-  j1939_tp_cm_transmit_manager(bus[0], -1);
-  j1939_receive(bus[1], -1);
-  j1939_tp_cm_transmit_manager(bus[1], -1);
+  printf(">>> %d\n", j1939_receive(bus[0], -1));
+  printf(">>> %d\n", j1939_tp_cm_transmit_manager(bus[0], -1));
+  printf(">>> %d\n", j1939_receive(bus[1], -1));
+  printf(">>> %d\n", j1939_tp_cm_transmit_manager(bus[1], -1));
 
-  j1939_receive(bus[0], -1);
-  j1939_tp_cm_transmit_manager(bus[0], -1);
-  j1939_receive(bus[1], -1);
-  j1939_tp_cm_transmit_manager(bus[1], -1);
+  printf(">>> %d\n", j1939_receive(bus[0], -1));
+  printf(">>> %d\n", j1939_tp_cm_transmit_manager(bus[0], -1));
+  printf(">>> %d\n", j1939_receive(bus[1], -1));
+  printf(">>> %d\n", j1939_tp_cm_transmit_manager(bus[1], -1));
 
-  j1939_receive(bus[0], -1);
-  j1939_tp_cm_transmit_manager(bus[0], -1);
-  j1939_receive(bus[1], -1);
-  j1939_tp_cm_transmit_manager(bus[1], -1);
+  printf(">>> %d\n", j1939_receive(bus[0], -1));
+  printf(">>> %d\n", j1939_tp_cm_transmit_manager(bus[0], -1));
+  printf(">>> %d\n", j1939_receive(bus[1], -1));
+  printf(">>> %d\n", j1939_tp_cm_transmit_manager(bus[1], -1));
 
-  j1939_receive(bus[0], -1);
-  j1939_tp_cm_transmit_manager(bus[0], -1);
-  j1939_receive(bus[1], -1);
-  j1939_tp_cm_transmit_manager(bus[1], -1);
+  printf(">>> %d\n", j1939_receive(bus[0], -1));
+  printf(">>> %d\n", j1939_tp_cm_transmit_manager(bus[0], -1));
+  printf(">>> %d\n", j1939_receive(bus[1], -1));
+  printf(">>> %d\n", j1939_tp_cm_transmit_manager(bus[1], -1));
 
   j1939_delete(bus[0]);
   j1939_delete(bus[1]);

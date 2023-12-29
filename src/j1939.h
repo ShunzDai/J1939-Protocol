@@ -19,10 +19,7 @@
 extern "C" {
 #endif /* __cplusplus */
 
-#include "j1939_port.h"
-#include "j1939_config.h"
-#include <stdint.h>
-#include <stdbool.h>
+#include "j1939_types.h"
 
 typedef void (*j1939_cb_t)(j1939_port_t port, const j1939_message_t *msg, void *arg);
 
