@@ -16,15 +16,15 @@
 #include "j1939.h"
 #include "gtest/gtest.h"
 
-static auto recv_cb = +[](j1939_port_t port, const j1939_message_t *msg, void *arg) {
-  printf("port [%02X] recv id [%08X] size [%d] data [", port, msg->id, msg->size);
+static auto recv_cb = +[](j1939_port_t *port, const j1939_message_t *msg, void *arg) {
+  printf("port [%02lX] recv id [%08X] size [%d] data [", (size_t)port, msg->id, msg->size);
   for (uint16_t idx = 0; idx < msg->size; ++idx) {
     printf("%02X%s", msg->data[idx], idx == msg->size - 1 ? "]\n" : " ");
   }
 };
 
-static auto timeout_cb = +[](j1939_port_t port, const j1939_message_t *msg, void *arg) {
-  printf("port [%02X] timeout id [%08X] size [%d] data [", port, msg->id, msg->size);
+static auto timeout_cb = +[](j1939_port_t *port, const j1939_message_t *msg, void *arg) {
+  printf("port [%02lX] timeout id [%08X] size [%d] data [", (size_t)port, msg->id, msg->size);
   for (uint16_t idx = 0; idx < msg->size; ++idx) {
     printf("%02X%s", msg->data[idx], idx == msg->size - 1 ? "]\n" : " ");
   }
@@ -43,7 +43,7 @@ TEST(j1939, protocol) {
       .self_address = 0x01,
       .recv_cb = recv_cb,
       .timeout_cb = timeout_cb,
-      .port = 1,
+      .port = (j1939_port_t *)1,
       .arg = nullptr,
     },
   };

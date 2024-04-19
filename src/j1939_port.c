@@ -19,11 +19,11 @@
 #if defined J1939_PORT_VIRTUAL
 #include "j1939_virtual.h"
 
-j1939_status_t j1939_port_transmit(j1939_port_t self, const j1939_static_message_t *msg, uint32_t timeout_ms) {
+j1939_status_t j1939_port_transmit(j1939_port_t *self, const j1939_static_message_t *msg, uint32_t timeout_ms) {
   return j1939_virtual_transmit(self, msg, timeout_ms);
 }
 
-j1939_status_t j1939_port_receive(j1939_port_t self, j1939_static_message_t *msg, uint32_t timeout_ms) {
+j1939_status_t j1939_port_receive(j1939_port_t *self, j1939_static_message_t *msg, uint32_t timeout_ms) {
   return j1939_virtual_receive(self, msg, timeout_ms);
 }
 

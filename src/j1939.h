@@ -21,13 +21,13 @@ extern "C" {
 
 #include "j1939_types.h"
 
-typedef void (*j1939_cb_t)(j1939_port_t port, const j1939_message_t *msg, void *arg);
+typedef void (*j1939_cb_t)(j1939_port_t *port, const j1939_message_t *msg, void *arg);
 
 typedef struct j1939_config {
   uint8_t self_address;
   j1939_cb_t recv_cb;
   j1939_cb_t timeout_cb;
-  j1939_port_t port;
+  j1939_port_t *port;
   void *arg;
 } j1939_config_t;
 

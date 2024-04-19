@@ -22,11 +22,7 @@ extern "C"{
 #include "j1939_config.h"
 #include <stdint.h>
 
-#if defined J1939_PORT_VIRTUAL
-typedef int j1939_port_t;
-#elif defined J1939_PORT_ESP32
-typedef void * j1939_port_t;
-#endif /* J1939_PORT */
+typedef struct j1939_port j1939_port_t;
 
 typedef enum j1939_status {
   J1939_ERROR = -10,

@@ -178,7 +178,7 @@ struct j1939 {
   j1939_tp_status_t status;
   j1939_cb_t recv_cb;
   j1939_cb_t timeout_cb;
-  j1939_port_t port;
+  j1939_port_t *port;
   j1939_message_t *lmsg;
   void *arg;
 };
